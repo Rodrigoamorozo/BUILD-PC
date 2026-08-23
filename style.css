@@ -1,0 +1,6 @@
+.steps { counter-reset: step; }
+.step { counter-increment: step; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
