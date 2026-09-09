@@ -11,7 +11,7 @@ const montarBtn = document.getElementById('montar-btn');
 if (themeBtn) {
   themeBtn.addEventListener('click', () => {
     html.classList.toggle('dark');
-    themeLabel.textContent = html.classList.contains('dark') ? 'MODO EMO' : 'MODO BEM';
+    themeLabel.textContent = html.classList.contains('dark') ? 'Modo claro' : 'Modo escuro';
   });
 }
 

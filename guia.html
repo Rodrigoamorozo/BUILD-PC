@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildPC — Guia</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="tailwind.config.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300 min-h-screen">
+
+  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light/60 dark:border-line/60 backdrop-blur bg-bg-light/85 dark:bg-bg/85">
+    <a href="index.html" class="flex items-center gap-2 font-display font-semibold text-[15px]">
+      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="6" y="6" width="12" height="12" rx="1.5"/>
+        <rect x="10" y="10" width="4" height="4"/>
+        <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
+      </svg>
+      BuildPC
+    </a>
+    <div class="flex items-center gap-6 text-sm">
+      <a href="index.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Início</a>
+      <a href="guia.html" class="text-copper-light dark:text-copper">Guia</a>
+      <button id="theme-btn" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">
+        <span id="theme-label">Modo claro</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ====== INTRO ====== -->
+  <section class="px-6 md:px-[6vw] pt-24 pb-16 max-w-3xl">
+    <h1 class="font-display font-semibold text-[clamp(32px,5vw,52px)] leading-[1.08] mb-4">Entenda seu PC</h1>
+    <p class="text-muted-light dark:text-muted text-lg leading-relaxed">
+      Antes de escolher suas peças, entenda o que cada uma faz.
+    </p>
+  </section>
+
+  <!-- ====== CONTEÚDO + BARRA LATERAL ====== -->
+  <div class="px-6 md:px-[6vw] lg:flex lg:gap-16 lg:justify-between items-start">
+
+    <main class="flex-1 max-w-2xl">
+
+      <!-- Peças -->
+      <section id="pecas" class="pb-16 border-t border-line-light/60 dark:border-line/60 pt-12">
+        <div class="flex gap-5 py-6 border-b border-line-light/60 dark:border-line/60">
+          <span class="text-2xl w-8 shrink-0">🧠</span>
+          <div>
+            <h3 class="font-display font-medium text-base mb-1">Processador</h3>
+            <p class="text-sm text-muted-light dark:text-muted leading-relaxed">O cérebro do computador. Executa instruções e realiza cálculos.</p>
+          </div>
+        </div>
+        <div class="flex gap-5 py-6 border-b border-line-light/60 dark:border-line/60">
+          <span class="text-2xl w-8 shrink-0">🎮</span>
+          <div>
+            <h3 class="font-display font-medium text-base mb-1">Placa de vídeo</h3>
+            <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Gera imagens, vídeos e gráficos. Essencial pra jogos.</p>
+          </div>
+        </div>
+        <div class="flex gap-5 py-6 border-b border-line-light/60 dark:border-line/60">
+          <span class="text-2xl w-8 shrink-0">⚡</span>
+          <div>
+            <h3 class="font-display font-medium text-base mb-1">Memória RAM</h3>
+            <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Memória de trabalho. Mantém programas disponíveis rapidamente.</p>
+          </div>
+        </div>
+        <div class="flex gap-5 py-6 border-b border-line-light/60 dark:border-line/60">
+          <span class="text-2xl w-8 shrink-0">💾</span>
+          <div>
+            <h3 class="font-display font-medium text-base mb-1">Armazenamento</h3>
+            <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Onde ficam seus arquivos, jogos, programas e o sistema.</p>
+          </div>
+        </div>
+        <div class="flex gap-5 py-6 border-b border-line-light/60 dark:border-line/60">
+          <span class="text-2xl w-8 shrink-0">🔌</span>
+          <div>
+            <h3 class="font-display font-medium text-base mb-1">Fonte</h3>
+            <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Converte a energia da tomada e alimenta os componentes.</p>
+          </div>
+        </div>
+        <div class="flex gap-5 py-6 border-b border-line-light/60 dark:border-line/60">
+          <span class="text-2xl w-8 shrink-0">🧩</span>
+          <div>
+            <h3 class="font-display font-medium text-base mb-1">Placa-mãe</h3>
+            <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Conecta os componentes e permite que trabalhem juntos.</p>
+          </div>
+        </div>
+        <div class="flex gap-5 py-6 border-b border-line-light/60 dark:border-line/60">
+          <span class="text-2xl w-8 shrink-0">📦</span>
+          <div>
+            <h3 class="font-display font-medium text-base mb-1">Gabinete</h3>
+            <p class="text-sm text-muted-light dark:text-muted leading-relaxed">A estrutura que abriga e protege os componentes.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gargalo -->
+      <section id="gargalo" class="py-16 border-t border-line-light/60 dark:border-line/60">
+        <div class="mb-10">
+          <h2 class="font-display font-semibold text-3xl mb-4">O que é gargalo?</h2>
+          <p class="text-muted-light dark:text-muted leading-relaxed">
+            Acontece quando uma peça segura a outra: um processador fraco não deixa uma
+            placa de vídeo forte mostrar tudo o que ela pode. Não significa que o PC está
+            ruim: o impacto muda conforme o jogo, a resolução e o que você roda.
+          </p>
+        </div>
+
+        <div class="border border-line-light/60 dark:border-line/60 rounded-2xl p-8 md:p-10 bg-panel-light dark:bg-panel/40">
+          <p class="text-xs text-muted-light dark:text-muted mb-6">Exemplo: Core i5-13400F + RTX 5090</p>
+          <div class="space-y-5">
+            <div>
+              <div class="flex justify-between text-sm mb-2">
+                <span>Core i5-13400F</span>
+                <span class="text-muted-light dark:text-muted">58</span>
+              </div>
+              <div class="h-2 rounded-full bg-line-light/60 dark:bg-line/60 overflow-hidden">
+                <div class="h-full bg-copper-light dark:bg-copper rounded-full" style="width: 58%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-2">
+                <span>RTX 5090</span>
+                <span class="text-muted-light dark:text-muted">100</span>
+              </div>
+              <div class="h-2 rounded-full bg-line-light/60 dark:bg-line/60 overflow-hidden">
+                <div class="h-full bg-cyan-light dark:bg-cyan rounded-full" style="width: 100%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-7 pt-6 border-t border-line-light/40 dark:border-line/40 flex items-start gap-3">
+            <span class="text-cyan-light dark:text-cyan text-lg leading-none mt-0.5">→</span>
+            <p class="text-sm text-muted-light dark:text-muted leading-relaxed">
+              Diferença de 42%: o processador vai limitar a placa de vídeo em boa parte
+              dos jogos, principalmente em resoluções mais baixas.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ordem de escolha -->
+      <section id="ordem" class="py-16 border-t border-line-light/60 dark:border-line/60">
+        <h2 class="font-display font-semibold text-3xl mb-3">Qual peça escolher primeiro?</h2>
+        <p class="text-muted-light dark:text-muted mb-10 leading-relaxed">
+          Não existe uma ordem obrigatória para todos os PCs. Essa sequência serve como um
+          ponto de partida pra facilitar a escolha e verificar compatibilidade.
+        </p>
+
+        <div>
+          <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
+            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">1</span>
+            <div>
+              <h4 class="font-display font-medium mb-1">Defina o objetivo</h4>
+              <p class="text-sm text-muted-light dark:text-muted">Jogos, estudos, edição ou uso geral.</p>
+            </div>
+          </div>
+          <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
+            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">2</span>
+            <div>
+              <h4 class="font-display font-medium mb-1">Processador</h4>
+              <p class="text-sm text-muted-light dark:text-muted">A base de tudo. Pensa no que você vai fazer com o PC.</p>
+            </div>
+          </div>
+          <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
+            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">3</span>
+            <div>
+              <h4 class="font-display font-medium mb-1">Placa-mãe compatível</h4>
+              <p class="text-sm text-muted-light dark:text-muted">Precisa combinar com o socket do processador.</p>
+            </div>
+          </div>
+          <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
+            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">4</span>
+            <div>
+              <h4 class="font-display font-medium mb-1">Memória RAM</h4>
+              <p class="text-sm text-muted-light dark:text-muted">DDR4 ou DDR5, conforme a placa-mãe.</p>
+            </div>
+          </div>
+          <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
+            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">5</span>
+            <div>
+              <h4 class="font-display font-medium mb-1">Placa de vídeo</h4>
+              <p class="text-sm text-muted-light dark:text-muted">Equilibrada com o processador, sem gargalo.</p>
+            </div>
+          </div>
+          <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
+            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">6</span>
+            <div>
+              <h4 class="font-display font-medium mb-1">Armazenamento</h4>
+              <p class="text-sm text-muted-light dark:text-muted">SSD NVMe pra velocidade, HD pra espaço barato.</p>
+            </div>
+          </div>
+          <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
+            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">7</span>
+            <div>
+              <h4 class="font-display font-medium mb-1">Fonte</h4>
+              <p class="text-sm text-muted-light dark:text-muted">Some a potência de tudo e escolhe com folga.</p>
+            </div>
+          </div>
+          <div class="flex gap-6 py-5 border-t border-b border-line-light/60 dark:border-line/60">
+            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">8</span>
+            <div>
+              <h4 class="font-display font-medium mb-1">Gabinete</h4>
+              <p class="text-sm text-muted-light dark:text-muted">Confere se tudo cabe dentro dele.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA no fim do conteúdo (visível no mobile, escondido quando o card fixo já aparece) -->
+      <section class="py-12 border-t border-line-light/60 dark:border-line/60 lg:hidden">
+        <a href="buildpc.html" class="bg-copper-light dark:bg-copper text-white font-display font-medium text-[15px] px-6 py-3.5 rounded-lg hover:brightness-110 transition-all inline-block">
+          Ir pra Monte seu PC
+        </a>
+      </section>
+
+    </main>
+
+    <!-- Barra lateral: índice + CTA fixos -->
+    <aside class="hidden lg:block w-64 shrink-0 sticky top-28 pt-12 pb-16">
+      <p class="text-xs text-muted-light dark:text-muted mb-4">Nesta página</p>
+      <nav class="space-y-3 text-sm mb-10">
+        <a href="#pecas" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Peças</a>
+        <a href="#gargalo" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Gargalo</a>
+        <a href="#ordem" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Ordem de escolha</a>
+      </nav>
+
+      <div class="border border-line-light/60 dark:border-line/60 rounded-2xl p-5">
+        <p class="font-display font-medium mb-2">Pronto pra montar?</p>
+        <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-5">
+          Aplique o que aprendeu direto na hora de escolher as peças.
+        </p>
+        <a href="buildpc.html" class="bg-copper-light dark:bg-copper text-white font-display font-medium text-sm px-5 py-2.5 rounded-lg hover:brightness-110 transition-all inline-block">
+          Monte seu PC
+        </a>
+      </div>
+    </aside>
+
+  </div>
+
+  <footer class="px-6 md:px-[6vw] py-8 border-t border-line-light/60 dark:border-line/60 text-sm text-muted-light dark:text-muted mt-8">
+    © 2026 BuildPC
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

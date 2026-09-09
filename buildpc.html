@@ -4,40 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BuildPC — Montar PC</title>
- 
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="tailwind.config.js"></script>
- 
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
- 
+
 <link rel="stylesheet" href="style.css">
- 
+
 <!-- Biblioteca do Supabase (banco de dados das peças) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 </head>
- 
+
 <body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300 min-h-screen">
- 
-  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light dark:border-line backdrop-blur bg-bg-light/85 dark:bg-bg/85">
-    <a href="index.html" class="flex items-center gap-2 font-semibold tracking-[0.14em] uppercase text-sm">
-      <svg class="w-[20px] h-[20px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+
+  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light/60 dark:border-line/60 backdrop-blur bg-bg-light/85 dark:bg-bg/85">
+    <a href="index.html" class="flex items-center gap-2 font-display font-semibold text-[15px]">
+      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
         <rect x="6" y="6" width="12" height="12" rx="1.5"/>
         <rect x="10" y="10" width="4" height="4"/>
         <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
       </svg>
       BuildPC
     </a>
-    <button id="theme-btn"
-      class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-copper transition-colors">
-      <span id="theme-label">MODO ESCURO</span>
-    </button>
+    <div class="flex items-center gap-6 text-sm">
+      <a href="index.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Início</a>
+      <a href="guia.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Guia</a>
+      <button id="theme-btn" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">
+        <span id="theme-label">Modo claro</span>
+      </button>
+    </div>
   </nav>
- 
+
   <section class="px-6 md:px-[6vw] py-16">
-    <p class="font-mono text-xs tracking-[0.18em] text-copper-light dark:text-copper mb-4">MONTAGEM</p>
     <h1 class="font-display font-semibold text-[clamp(28px,4.5vw,44px)] mb-3">Monte seu PC</h1>
     <p class="text-muted-light dark:text-muted max-w-[520px] mb-10">
       Escolha uma peça de cada categoria. O total e os avisos de compatibilidade
@@ -45,10 +47,13 @@
     </p>
 
     <!-- Abas de categoria -->
-    <div id="categorias" class="flex flex-wrap gap-2 mb-4 font-mono text-xs"></div>
+    <div id="categorias" class="flex flex-wrap gap-2 mb-4 text-sm"></div>
+
+    <!-- Dica + "o que observar" da categoria ativa -->
+    <div id="dica-categoria" class="mb-6 space-y-1"></div>
 
     <!-- Aviso de que a lista está filtrada por compatibilidade -->
-    <p id="filtro-info" class="hidden text-xs font-mono text-cyan-light dark:text-cyan mb-8"></p>
+    <p id="filtro-info" class="hidden text-sm text-cyan-light dark:text-cyan mb-8"></p>
 
     <!-- Avisos de incompatibilidade -->
     <div id="avisos" class="hidden mb-8 border border-red-500/40 bg-red-500/10 text-red-400 rounded-lg px-4 py-3 text-sm space-y-1"></div>
@@ -59,11 +64,11 @@
 
       <!-- Resumo do build -->
       <aside class="lg:w-[300px] shrink-0">
-        <div class="lg:sticky lg:top-24 border border-line-light dark:border-line rounded-xl p-6 bg-panel-light dark:bg-panel">
+        <div class="lg:sticky lg:top-24 border border-line-light/60 dark:border-line/60 rounded-2xl p-6 bg-panel-light dark:bg-panel">
           <h3 class="font-display font-semibold text-base mb-4">Seu build</h3>
           <ul id="resumo-lista" class="text-sm space-y-2 mb-5 min-h-[40px]"></ul>
-          <div class="flex items-center justify-between pt-4 border-t border-line-light dark:border-line">
-            <span class="text-xs font-mono text-muted-light dark:text-muted tracking-[0.1em]">TOTAL</span>
+          <div class="flex items-center justify-between pt-4 border-t border-line-light/60 dark:border-line/60">
+            <span class="text-sm text-muted-light dark:text-muted">Total</span>
             <span id="total-preco" class="font-display font-semibold text-lg text-copper-light dark:text-copper">R$ 0</span>
           </div>
         </div>

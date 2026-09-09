@@ -20,9 +20,9 @@
 <body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300">
 
   <!-- ====== MENU DO TOPO ====== -->
-  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light dark:border-line backdrop-blur bg-bg-light/85 dark:bg-bg/85">
-    <span class="flex items-center gap-2 font-semibold tracking-[0.14em] uppercase text-sm">
-      <svg class="w-[20px] h-[20px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light/60 dark:border-line/60 backdrop-blur bg-bg-light/85 dark:bg-bg/85">
+    <span class="flex items-center gap-2 font-display font-semibold text-[15px]">
+      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
         <rect x="6" y="6" width="12" height="12" rx="1.5"/>
         <rect x="10" y="10" width="4" height="4"/>
         <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
@@ -30,98 +30,81 @@
       BuildPC
     </span>
 
-    <button id="theme-btn"
-      class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-copper transition-colors">
-      <span id="theme-label">MODO EMO</span>
-    </button>
+    <div class="flex items-center gap-6 text-sm">
+      <a href="index.html" class="text-ink-light dark:text-ink">Início</a>
+      <a href="guia.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Guia</a>
+      <button id="theme-btn" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">
+        <span id="theme-label">Modo claro</span>
+      </button>
+    </div>
   </nav>
 
   <!-- ====== SEÇÃO PRINCIPAL (HERO) ====== -->
-  <section class="px-6 md:px-[6vw] pt-20 pb-24 max-w-3xl">
-    <p class="font-mono text-xs tracking-[0.18em] text-copper-light dark:text-copper mb-5 flex items-center gap-2">
-      <span class="w-[7px] h-[7px] bg-copper-light dark:bg-copper inline-block"></span>
-      MONTAGEM DE PC, DO ZERO
-    </p>
-
-    <h1 class="font-display font-semibold text-[clamp(34px,6vw,64px)] leading-[1.08] tracking-tight mb-6">
-      Cada peça no lugar
-      <span class="text-copper-light dark:text-copper">certo</span>,
-      antes de você comprar.
+  <section class="px-6 md:px-[6vw] pt-24 pb-28 max-w-3xl">
+    <h1 class="font-display font-semibold text-[clamp(36px,6.5vw,68px)] leading-[1.05] tracking-tight mb-7">
+      Monte um PC que
+      <span class="relative inline-block">
+        combina
+        <svg class="absolute left-0 -bottom-1 w-full" height="10" viewBox="0 0 200 10" preserveAspectRatio="none">
+          <path d="M2 7 C 50 2, 150 2, 198 7" class="stroke-copper-light dark:stroke-copper" stroke-width="4" fill="none" stroke-linecap="round"/>
+        </svg>
+      </span>
+      de verdade.
     </h1>
 
-    <p class="text-muted-light dark:text-muted text-[17px] leading-relaxed max-w-[540px] mb-10">
-      O BuildPC te guia na montagem do seu computador: você escolhe as peças,
-      o site confere se elas combinam entre si (processador, fonte, placa-mãe)
-      e mostra o valor total conforme você vai montando.
+    <p class="text-muted-light dark:text-muted text-lg leading-relaxed max-w-[480px] mb-10">
+      Escolha as peças e a gente confere se o socket, a memória, o gabinete e o
+      equilíbrio entre processador e placa de vídeo estão certos antes de você
+      fechar a compra.
     </p>
 
-    <button id="montar-btn" class="inline-flex items-center gap-3 bg-copper-light dark:bg-copper text-bg-light dark:text-bg font-display font-semibold text-base px-7 py-4 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-8px] hover:shadow-copper-light dark:hover:shadow-copper transition-all">
+    <button id="montar-btn" class="bg-copper-light dark:bg-copper text-white font-display font-medium text-[15px] px-6 py-3.5 rounded-lg hover:brightness-110 transition-all">
       Monte seu PC
-      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-        <path d="M5 12h14M13 6l6 6-6 6"/>
-      </svg>
     </button>
 
-    <p class="mt-5 text-xs text-muted-light dark:text-muted flex items-center gap-2">
-      <span class="w-1.5 h-1.5 rounded-full bg-cyan-light dark:bg-cyan"></span>
-      Sem cadastro para começar a montar
+    <p class="mt-6 text-sm text-muted-light dark:text-muted">
+      Sem cadastro para começar a montar.
     </p>
   </section>
 
   <!-- ====== COMO FUNCIONA ====== -->
-  <section class="px-6 md:px-[6vw] py-20 border-t border-line-light dark:border-line">
-    <div class="flex flex-wrap justify-between items-end gap-6 mb-14">
-      <h2 class="font-display font-semibold text-[clamp(24px,3.2vw,34px)]">Como o site funciona</h2>
-      <p class="text-muted-light dark:text-muted text-sm max-w-[320px] leading-relaxed">
-        Três etapas simples entre a ideia do seu PC e a lista final de peças.
-      </p>
-    </div>
+  <section class="px-6 md:px-[6vw] py-20 border-t border-line-light/60 dark:border-line/60">
+    <h2 class="font-display font-semibold text-2xl mb-12 max-w-md">Da escolha da peça até o build fechado.</h2>
 
-    <div class="steps grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
-      <div class="step">
-        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-copper text-copper-light dark:text-copper mb-5">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <rect x="6" y="6" width="12" height="12" rx="1.5"/>
-            <rect x="10" y="10" width="4" height="4"/>
-            <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
-          </svg>
-        </div>
-        <h3 class="font-display font-semibold text-lg mb-3">Escolha as peças</h3>
-        <p class="text-sm text-muted-light dark:text-muted leading-relaxed max-w-[280px]">
-          Placa-mãe, processador, memória, armazenamento, fonte e gabinete.
-        </p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-line-light/60 dark:bg-line/60 border border-line-light/60 dark:border-line/60 rounded-2xl overflow-hidden">
+      <div class="bg-bg-light dark:bg-bg p-8">
+        <p class="font-display text-3xl text-copper-light dark:text-copper mb-4">1</p>
+        <h3 class="font-display font-medium text-lg mb-2">Escolha as peças</h3>
+        <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Placa-mãe, processador, memória, armazenamento, fonte e gabinete.</p>
       </div>
-      <div class="step">
-        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-copper text-copper-light dark:text-copper mb-5">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M9 12l2 2 4-4"/>
-            <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
-          </svg>
-        </div>
-        <h3 class="font-display font-semibold text-lg mb-3">Compatibilidade automática</h3>
-        <p class="text-sm text-muted-light dark:text-muted leading-relaxed max-w-[280px]">
-          O site avisa se alguma peça não combina antes de você fechar a compra.
-        </p>
+      <div class="bg-bg-light dark:bg-bg p-8">
+        <p class="font-display text-3xl text-copper-light dark:text-copper mb-4">2</p>
+        <h3 class="font-display font-medium text-lg mb-2">Compatibilidade automática</h3>
+        <p class="text-sm text-muted-light dark:text-muted leading-relaxed">O site avisa se alguma peça não combina, antes de você fechar a compra.</p>
       </div>
-      <div class="step">
-        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-copper text-copper-light dark:text-copper mb-5">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <rect x="4" y="4" width="16" height="11" rx="1.2"/>
-            <path d="M9 20h6M12 15v5"/>
-          </svg>
-        </div>
-        <h3 class="font-display font-semibold text-lg mb-3">Veja seu build pronto</h3>
-        <p class="text-sm text-muted-light dark:text-muted leading-relaxed max-w-[280px]">
-          Acompanhe o valor total em tempo real conforme você monta.
-        </p>
+      <div class="bg-bg-light dark:bg-bg p-8">
+        <p class="font-display text-3xl text-copper-light dark:text-copper mb-4">3</p>
+        <h3 class="font-display font-medium text-lg mb-2">Veja o build pronto</h3>
+        <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Acompanhe o valor total em tempo real conforme você monta.</p>
       </div>
     </div>
   </section>
 
+  <!-- ====== CHAMADA PRO GUIA ====== -->
+  <section class="px-6 md:px-[6vw] py-20 border-t border-line-light/60 dark:border-line/60 max-w-2xl">
+    <h2 class="font-display font-semibold text-[clamp(22px,3vw,30px)] mb-3">Ainda não sabe qual peça escolher?</h2>
+    <p class="text-muted-light dark:text-muted leading-relaxed mb-8">
+      Aprenda o básico sobre cada componente, descubra o que é gargalo e veja como montar
+      seu PC passo a passo.
+    </p>
+    <a href="guia.html" class="text-copper-light dark:text-copper font-medium hover:underline underline-offset-4">
+      Conheça as peças
+    </a>
+  </section>
+
   <!-- ====== RODAPÉ ====== -->
-  <footer class="px-6 md:px-[6vw] py-6 border-t border-line-light dark:border-line flex flex-wrap justify-between gap-3 text-xs font-mono text-muted-light dark:text-muted">
-    <span>© 2026 BUILDPC</span>
-    <span>MONTAGEM DE PC PASSO A PASSO</span>
+  <footer class="px-6 md:px-[6vw] py-8 border-t border-line-light/60 dark:border-line/60 text-sm text-muted-light dark:text-muted">
+    © 2026 BuildPC
   </footer>
 
   <!-- Lógica própria, separada do HTML -->
