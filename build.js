@@ -323,7 +323,7 @@ function renderAvisos() {
     return;
   }
   box.classList.remove('hidden');
-  box.innerHTML = avisos.map(a => `<p>⚠ ${a}</p>`).join('');
+  box.innerHTML = avisos.map(a => `<p>${a}</p>`).join('');
 }
 
 function renderDica() {
