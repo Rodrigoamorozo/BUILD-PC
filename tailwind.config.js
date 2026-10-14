@@ -13,6 +13,8 @@ tailwind.config = {
         muted:  { DEFAULT: '#8F99A8', light: '#5C6470' },
         copper: { DEFAULT: '#241ec9', light: '#241ec9' },
         cyan:   { DEFAULT: '#63D9CC', light: '#158C81' },
+        // Cobre de verdade — só decorativo (trilhas de placa-mãe), nunca em texto/botão.
+        trace:  { DEFAULT: '#C97B3D', light: '#B8632A' },
       },
       fontFamily: {
         display: ['"Space Grotesk"', 'sans-serif'],

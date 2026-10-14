@@ -3,27 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0D12">
 <title>BuildPC — Montar PC</title>
-
+ 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="tailwind.config.js"></script>
-
+ 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
+ 
 <link rel="stylesheet" href="style.css">
-
+ 
 <!-- Biblioteca do Supabase (banco de dados das peças) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 </head>
-
+ 
 <body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300 min-h-screen">
-
-  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light/60 dark:border-line/60 backdrop-blur bg-bg-light/85 dark:bg-bg/85">
+ 
+  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light dark:border-line backdrop-blur bg-bg-light/85 dark:bg-bg/85">
     <a href="index.html" class="flex items-center gap-2 font-display font-semibold text-[15px]">
-      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
         <rect x="6" y="6" width="12" height="12" rx="1.5"/>
         <rect x="10" y="10" width="4" height="4"/>
         <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
@@ -31,11 +32,14 @@
       BuildPC
     </a>
     <div class="flex items-center gap-6 text-sm">
-      <a href="index.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Início</a>
       <a href="guia.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Guia</a>
-      <button id="theme-btn" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">
-        <span id="theme-label">Modo claro</span>
-      </button>
+      <div id="conta-area" class="relative flex items-center">
+        <a href="login.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Entrar</a>
+      </div>
+      <button id="theme-btn"
+      class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-copper transition-colors">
+      <span id="theme-label">Modo claro</span>
+    </button>
     </div>
   </nav>
 
@@ -47,16 +51,20 @@
     </p>
 
     <!-- Abas de categoria -->
-    <div id="categorias" class="flex flex-wrap gap-2 mb-4 text-sm"></div>
+    <div id="categorias" class="flex flex-wrap gap-x-1 gap-y-0 mb-4 text-sm border-b border-line-light dark:border-line"></div>
 
-    <!-- Dica + "o que observar" da categoria ativa -->
-    <div id="dica-categoria" class="mb-6 space-y-1"></div>
+    <!-- Dica da categoria ativa -->
+    <div id="dica-categoria" class="mb-6"></div>
 
-    <!-- Aviso de que a lista está filtrada por compatibilidade -->
-    <p id="filtro-info" class="hidden text-sm text-cyan-light dark:text-cyan mb-8"></p>
+    <!-- Aviso de lista filtrada por compatibilidade -->
+    <p id="filtro-info" class="hidden text-sm text-cyan-light dark:text-cyan mb-6"></p>
+
+    <!-- Alerta de gargalo: linguagem simples, bem visível, só aparece
+         quando o desequilíbrio passa de 15% -->
+    <div id="gargalo-alerta" class="hidden mb-8 border-2 border-copper-light dark:border-copper bg-copper-light/10 dark:bg-copper/10 rounded-lg px-5 py-4" aria-live="polite"></div>
 
     <!-- Avisos de incompatibilidade -->
-    <div id="avisos" class="hidden mb-8 border border-red-500/40 bg-red-500/10 text-red-400 rounded-lg px-4 py-3 text-sm space-y-1"></div>
+    <div id="avisos" class="hidden mb-8 border border-red-500/40 bg-red-500/10 text-red-400 rounded-lg px-4 py-3 text-sm space-y-1" aria-live="polite"></div>
 
     <div class="flex flex-col lg:flex-row gap-10">
       <!-- Grade de peças da categoria ativa -->
@@ -64,19 +72,26 @@
 
       <!-- Resumo do build -->
       <aside class="lg:w-[300px] shrink-0">
-        <div class="lg:sticky lg:top-24 border border-line-light/60 dark:border-line/60 rounded-2xl p-6 bg-panel-light dark:bg-panel">
-          <h3 class="font-display font-semibold text-base mb-4">Seu build</h3>
+        <div class="lg:sticky lg:top-24 border border-line-light dark:border-line rounded-xl p-6 bg-panel-light dark:bg-panel">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display font-semibold text-base">Seu build</h3>
+            <span id="resumo-contagem" class="font-mono text-[11px] text-muted-light dark:text-muted"></span>
+          </div>
+          <div id="resumo-progresso" class="flex gap-1.5 mb-5"></div>
           <ul id="resumo-lista" class="text-sm space-y-2 mb-5 min-h-[40px]"></ul>
-          <div class="flex items-center justify-between pt-4 border-t border-line-light/60 dark:border-line/60">
+          <div class="flex items-center justify-between pt-4 border-t border-line-light dark:border-line">
             <span class="text-sm text-muted-light dark:text-muted">Total</span>
             <span id="total-preco" class="font-display font-semibold text-lg text-copper-light dark:text-copper">R$ 0</span>
           </div>
         </div>
+
+        <div id="gargalo-info" class="hidden mt-4 border border-line-light dark:border-line rounded-xl p-6 bg-panel-light dark:bg-panel"></div>
       </aside>
     </div>
   </section>
 
   <script src="build.js"></script>
+  <script src="conta.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

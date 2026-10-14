@@ -1,6 +1,40 @@
 .steps { counter-reset: step; }
 .step { counter-increment: step; }
 
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+
+/* Foco visível e consistente em todo elemento interativo — sem depender
+   só do azul padrão do navegador, que some no fundo escuro. */
+a, button {
+  outline-offset: 2px;
+}
+a:focus-visible, button:focus-visible {
+  outline: 2px solid #63D9CC;
+  outline-offset: 2px;
+}
+
+/* Aba de categoria estilo "conector de placa-mãe": ponto aceso (LED)
+   acima da aba ativa, linha embaixo preenchida quando há peça escolhida. */
+.pin-tab {
+  position: relative;
+  padding: 0.6rem 0.9rem 0.75rem;
+  border-bottom: 2px solid transparent;
+}
+.pin-tab::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: translate(-50%, -100%);
+  opacity: 0;
+}
+.pin-tab[data-active="true"]::before { opacity: 1; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }

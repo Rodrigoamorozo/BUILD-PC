@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0D12">
 <title>BuildPC — Guia</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -13,13 +14,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="style.css">
+<!-- Supabase (para o menu da conta) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
 </head>
 
 <body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300 min-h-screen">
 
   <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light/60 dark:border-line/60 backdrop-blur bg-bg-light/85 dark:bg-bg/85">
     <a href="index.html" class="flex items-center gap-2 font-display font-semibold text-[15px]">
-      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
         <rect x="6" y="6" width="12" height="12" rx="1.5"/>
         <rect x="10" y="10" width="4" height="4"/>
         <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
@@ -29,6 +33,9 @@
     <div class="flex items-center gap-6 text-sm">
       <a href="index.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Início</a>
       <a href="guia.html" class="text-copper-light dark:text-copper">Guia</a>
+      <div id="conta-area" class="relative flex items-center">
+        <a href="login.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Entrar</a>
+      </div>
       <button id="theme-btn" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">
         <span id="theme-label">Modo claro</span>
       </button>
@@ -50,6 +57,7 @@
 
       <!-- Peças -->
       <section id="pecas" class="pb-16 border-t border-line-light/60 dark:border-line/60 pt-12">
+        <h2 class="font-display font-semibold text-3xl mb-6">As peças do PC</h2>
         <div class="py-6 border-b border-line-light/60 dark:border-line/60">
             <h3 class="font-display font-medium text-base mb-1">Processador</h3>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">O cérebro do computador. Executa instruções e realiza cálculos.</p>
@@ -80,6 +88,64 @@
           </div>
       </section>
 
+      <!-- Gerações e compatibilidade -->
+      <section id="geracoes" class="py-16 border-t border-line-light/60 dark:border-line/60">
+        <h2 class="font-display font-semibold text-3xl mb-4">Gerações e compatibilidade</h2>
+        <p class="text-muted-light dark:text-muted leading-relaxed mb-10">
+          "Geração" é a versão de um processador ou placa de vídeo. A cada geração nova,
+          o fabricante muda o desempenho — e às vezes muda também o encaixe físico, o que
+          derruba a compatibilidade com peças mais antigas.
+        </p>
+
+        <div class="py-6 border-b border-line-light/60 dark:border-line/60">
+          <h3 class="font-display font-medium text-base mb-2">Processador: a geração muda o socket</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-3">
+            Cada geração de processador é feita pra um socket específico, e o socket
+            muda de tempos em tempos:
+          </p>
+          <ul class="text-sm text-muted-light dark:text-muted leading-relaxed space-y-1.5 list-disc pl-5">
+            <li><span class="text-ink-light dark:text-ink">Intel:</span> 12ª a 14ª geração (Core i3/i5/i7/i9) usam o socket LGA1700. A geração seguinte, Core Ultra série 200 (Arrow Lake), já mudou pra LGA1851 — motherboards LGA1700 não aceitam esses chips novos.</li>
+            <li><span class="text-ink-light dark:text-ink">AMD:</span> os Ryzen da série 7000 em diante usam o socket AM5. Os Ryzen 1000 a 5000 usam o socket AM4, mais antigo — as duas famílias não são compatíveis entre si.</li>
+          </ul>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mt-3">
+            Antes de comprar processador e placa-mãe juntos, confira sempre o socket dos
+            dois — é a regra mais importante de compatibilidade do PC inteiro.
+          </p>
+        </div>
+
+        <div class="py-6 border-b border-line-light/60 dark:border-line/60">
+          <h3 class="font-display font-medium text-base mb-2">Placa de vídeo: geração nova nem sempre é modelo mais forte</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed">
+            RTX 30, RTX 40 e RTX 50 (ou as séries RX da AMD) são gerações diferentes —
+            cada uma mais eficiente que a anterior. Mas isso não quer dizer que qualquer
+            placa da geração nova é mais forte que qualquer uma da geração antiga: uma
+            RTX 4060 (mais nova, gama de entrada) pode ficar abaixo de uma RTX 3070 (mais
+            velha, gama média-alta) em jogos pesados. Compare o modelo específico, não só
+            o número da geração.
+          </p>
+        </div>
+
+        <div class="py-6 border-b border-line-light/60 dark:border-line/60">
+          <h3 class="font-display font-medium text-base mb-2">Memória: DDR4 e DDR5 não encaixam juntas</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed">
+            DDR4 e DDR5 têm entalhes físicos diferentes no pente de memória — não dá pra
+            colocar uma DDR5 num slot DDR4, nem o contrário. A placa-mãe é que define qual
+            tipo ela aceita (algumas placas Intel de transição aceitam só um dos dois tipos,
+            nunca os dois ao mesmo tempo).
+          </p>
+        </div>
+
+        <div class="py-6 border-b border-line-light/60 dark:border-line/60">
+          <h3 class="font-display font-medium text-base mb-2">Chipset: o "sobrenome" da placa-mãe</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed">
+            Dentro do mesmo socket ainda existem várias placas-mãe, cada uma com um
+            chipset (B650, X670, B760, Z790...). O chipset define recursos extra —
+            overclock, quantidade de portas USB e M.2, número de faixas PCIe — mas o
+            socket continua sendo o que decide se o processador encaixa ou não.
+          </p>
+        </div>
+      </section>
+
       <!-- Gargalo -->
       <section id="gargalo" class="py-16 border-t border-line-light/60 dark:border-line/60">
         <div class="mb-10">
@@ -87,7 +153,9 @@
           <p class="text-muted-light dark:text-muted leading-relaxed">
             Acontece quando uma peça segura a outra: um processador fraco não deixa uma
             placa de vídeo forte mostrar tudo o que ela pode. Não significa que o PC está
-            ruim: o impacto muda conforme o jogo, a resolução e o que você roda.
+            ruim: o impacto muda conforme o jogo, a resolução e o que você roda. Não existe
+            um número "oficial" de gargalo — o que dá pra fazer é comparar o desempenho
+            relativo estimado das duas peças em jogos.
           </p>
         </div>
 
@@ -97,27 +165,45 @@
             <div>
               <div class="flex justify-between text-sm mb-2">
                 <span>Core i5-13400F</span>
-                <span class="text-muted-light dark:text-muted">58</span>
+                <span class="font-mono text-muted-light dark:text-muted">≈ 61</span>
               </div>
-              <div class="h-2 rounded-full bg-line-light/60 dark:bg-line/60 overflow-hidden">
-                <div class="h-full bg-copper-light dark:bg-copper rounded-full" style="width: 58%"></div>
+              <div class="meter-segmented h-2">
+                <span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-copper-light dark:bg-copper"></span><span class="bg-line-light/60 dark:bg-line/60"></span><span class="bg-line-light/60 dark:bg-line/60"></span><span class="bg-line-light/60 dark:bg-line/60"></span><span class="bg-line-light/60 dark:bg-line/60"></span><span class="bg-line-light/60 dark:bg-line/60"></span><span class="bg-line-light/60 dark:bg-line/60"></span><span class="bg-line-light/60 dark:bg-line/60"></span><span class="bg-line-light/60 dark:bg-line/60"></span>
               </div>
             </div>
             <div>
               <div class="flex justify-between text-sm mb-2">
                 <span>RTX 5090</span>
-                <span class="text-muted-light dark:text-muted">100</span>
+                <span class="font-mono text-muted-light dark:text-muted">100</span>
               </div>
-              <div class="h-2 rounded-full bg-line-light/60 dark:bg-line/60 overflow-hidden">
-                <div class="h-full bg-cyan-light dark:bg-cyan rounded-full" style="width: 100%"></div>
+              <div class="meter-segmented h-2">
+                <span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span><span class="bg-cyan-light dark:bg-cyan"></span>
               </div>
             </div>
           </div>
           <div class="mt-7 pt-6 border-t border-line-light/40 dark:border-line/40 flex items-start gap-3">
             <span class="text-cyan-light dark:text-cyan text-lg leading-none mt-0.5">→</span>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">
-              Diferença de 42%: o processador vai limitar a placa de vídeo em boa parte
-              dos jogos, principalmente em resoluções mais baixas.
+              O i5-13400F fica em 61 no índice de desempenho em jogos a 1080p; a RTX 5090
+              (a placa mais rápida do momento) é a referência 100. A diferença relativa —
+              (100 − 61) ÷ 100 — dá cerca de <strong class="text-ink-light dark:text-ink">39%</strong>:
+              o processador deixa boa parte do potencial da placa sem uso, principalmente em
+              resoluções mais baixas, onde é ele quem trava o jogo primeiro. Índices vêm de
+              hierarquias públicas de benchmark a 1080p (Tom's Hardware, jun/2026) — não é uma
+              medição deste site, e o resultado real muda por jogo, resolução e configuração.
+            </p>
+          </div>
+          <div class="mt-4 pt-4 border-t border-line-light/40 dark:border-line/40">
+            <p class="text-xs text-muted-light dark:text-muted mb-2">Como ler a diferença percentual entre os índices:</p>
+            <ul class="text-xs text-muted-light dark:text-muted space-y-1">
+              <li><span class="font-mono text-ink-light dark:text-ink">até 8%</span> — equilibrado, nenhuma peça segura a outra</li>
+              <li><span class="font-mono text-ink-light dark:text-ink">8–20%</span> — leve, dificilmente se nota</li>
+              <li><span class="font-mono text-ink-light dark:text-ink">20–30%</span> — perceptível em jogos mais pesados</li>
+              <li><span class="font-mono text-ink-light dark:text-ink">acima de 30%</span> — acentuado, uma peça claramente segura a outra</li>
+            </ul>
+            <p class="text-xs text-muted-light dark:text-muted mt-3">
+              Na ferramenta de montagem, acima de 15% o site já mostra um aviso — o suficiente
+              pra valer a pena revisar a combinação antes de fechar o build.
             </p>
           </div>
         </div>
@@ -133,58 +219,58 @@
 
         <div>
           <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
-            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">1</span>
+            <span class="font-mono text-lg text-copper-light dark:text-copper w-8 shrink-0">01</span>
             <div>
-              <h4 class="font-display font-medium mb-1">Defina o objetivo</h4>
+              <h3 class="font-display font-medium mb-1">Defina o objetivo</h3>
               <p class="text-sm text-muted-light dark:text-muted">Jogos, estudos, edição ou uso geral.</p>
             </div>
           </div>
           <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
-            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">2</span>
+            <span class="font-mono text-lg text-copper-light dark:text-copper w-8 shrink-0">02</span>
             <div>
-              <h4 class="font-display font-medium mb-1">Processador</h4>
+              <h3 class="font-display font-medium mb-1">Processador</h3>
               <p class="text-sm text-muted-light dark:text-muted">A base de tudo. Pensa no que você vai fazer com o PC.</p>
             </div>
           </div>
           <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
-            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">3</span>
+            <span class="font-mono text-lg text-copper-light dark:text-copper w-8 shrink-0">03</span>
             <div>
-              <h4 class="font-display font-medium mb-1">Placa-mãe compatível</h4>
+              <h3 class="font-display font-medium mb-1">Placa-mãe compatível</h3>
               <p class="text-sm text-muted-light dark:text-muted">Precisa combinar com o socket do processador.</p>
             </div>
           </div>
           <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
-            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">4</span>
+            <span class="font-mono text-lg text-copper-light dark:text-copper w-8 shrink-0">04</span>
             <div>
-              <h4 class="font-display font-medium mb-1">Memória RAM</h4>
+              <h3 class="font-display font-medium mb-1">Memória RAM</h3>
               <p class="text-sm text-muted-light dark:text-muted">DDR4 ou DDR5, conforme a placa-mãe.</p>
             </div>
           </div>
           <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
-            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">5</span>
+            <span class="font-mono text-lg text-copper-light dark:text-copper w-8 shrink-0">05</span>
             <div>
-              <h4 class="font-display font-medium mb-1">Placa de vídeo</h4>
+              <h3 class="font-display font-medium mb-1">Placa de vídeo</h3>
               <p class="text-sm text-muted-light dark:text-muted">Equilibrada com o processador, sem gargalo.</p>
             </div>
           </div>
           <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
-            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">6</span>
+            <span class="font-mono text-lg text-copper-light dark:text-copper w-8 shrink-0">06</span>
             <div>
-              <h4 class="font-display font-medium mb-1">Armazenamento</h4>
+              <h3 class="font-display font-medium mb-1">Armazenamento</h3>
               <p class="text-sm text-muted-light dark:text-muted">SSD NVMe pra velocidade, HD pra espaço barato.</p>
             </div>
           </div>
           <div class="flex gap-6 py-5 border-t border-line-light/60 dark:border-line/60">
-            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">7</span>
+            <span class="font-mono text-lg text-copper-light dark:text-copper w-8 shrink-0">07</span>
             <div>
-              <h4 class="font-display font-medium mb-1">Fonte</h4>
+              <h3 class="font-display font-medium mb-1">Fonte</h3>
               <p class="text-sm text-muted-light dark:text-muted">Some a potência de tudo e escolhe com folga.</p>
             </div>
           </div>
           <div class="flex gap-6 py-5 border-t border-b border-line-light/60 dark:border-line/60">
-            <span class="font-display text-2xl text-copper-light dark:text-copper w-8 shrink-0">8</span>
+            <span class="font-mono text-lg text-copper-light dark:text-copper w-8 shrink-0">08</span>
             <div>
-              <h4 class="font-display font-medium mb-1">Gabinete</h4>
+              <h3 class="font-display font-medium mb-1">Gabinete</h3>
               <p class="text-sm text-muted-light dark:text-muted">Confere se tudo cabe dentro dele.</p>
             </div>
           </div>
@@ -193,7 +279,7 @@
 
       <!-- CTA no fim do conteúdo (visível no mobile, escondido quando o card fixo já aparece) -->
       <section class="py-12 border-t border-line-light/60 dark:border-line/60 lg:hidden">
-        <a href="buildpc.html" class="bg-copper-light dark:bg-copper text-white font-display font-medium text-[15px] px-6 py-3.5 rounded-lg hover:brightness-110 transition-all inline-block">
+        <a href="buildpc.html" class="bg-copper-light dark:bg-copper text-white font-display font-medium text-[15px] px-6 py-3.5 rounded-lg hover:brightness-110 transition-[filter] inline-block">
           Ir pra Monte seu PC
         </a>
       </section>
@@ -205,6 +291,7 @@
       <p class="text-xs text-muted-light dark:text-muted mb-4">Nesta página</p>
       <nav class="space-y-3 text-sm mb-10">
         <a href="#pecas" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Peças</a>
+        <a href="#geracoes" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Gerações e compatibilidade</a>
         <a href="#gargalo" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Gargalo</a>
         <a href="#ordem" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Ordem de escolha</a>
       </nav>
@@ -214,7 +301,7 @@
         <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-5">
           Aplique o que aprendeu direto na hora de escolher as peças.
         </p>
-        <a href="buildpc.html" class="bg-copper-light dark:bg-copper text-white font-display font-medium text-sm px-5 py-2.5 rounded-lg hover:brightness-110 transition-all inline-block">
+        <a href="buildpc.html" class="bg-copper-light dark:bg-copper text-white font-display font-medium text-sm px-5 py-2.5 rounded-lg hover:brightness-110 transition-[filter] inline-block">
           Monte seu PC
         </a>
       </div>
@@ -226,6 +313,7 @@
     © 2026 BuildPC
   </footer>
 
+  <script src="conta.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

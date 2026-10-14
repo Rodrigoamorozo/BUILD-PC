@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0D12">
+<title>BuildPC — Entrar</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="tailwind.config.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+
+<!-- Biblioteca do Supabase (autenticação) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+</head>
+
+<body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300 min-h-screen">
+
+  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light dark:border-line backdrop-blur bg-bg-light/85 dark:bg-bg/85">
+    <a href="index.html" class="flex items-center gap-2 font-display font-semibold text-[15px]">
+      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <rect x="6" y="6" width="12" height="12" rx="1.5"/>
+        <rect x="10" y="10" width="4" height="4"/>
+        <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
+      </svg>
+      BuildPC
+    </a>
+    <div class="flex items-center gap-6 text-sm">
+      <a href="guia.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Guia</a>
+      <button id="theme-btn"
+        class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-copper transition-colors">
+        <span id="theme-label">Modo claro</span>
+      </button>
+    </div>
+  </nav>
+
+  <section class="relative px-6 py-16 md:py-24 min-h-[calc(100vh-77px)] flex items-center justify-center overflow-hidden">
+    <!-- Mesma trilha de cobre do hero da home, aqui bem discreta, só pra
+         não ser uma tela genérica de login isolada do resto do site. -->
+    <svg class="pointer-events-none select-none absolute -left-[10vw] top-1/2 -translate-y-1/2 w-[46vw] max-w-[520px] min-w-[320px] h-auto opacity-[0.08] dark:opacity-[0.10]" viewBox="0 0 500 460" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M40 40 H 220 L 260 80 V 200 L 300 240 H 460" stroke="#C97B3D" stroke-width="2.5"/>
+      <path d="M60 120 H 160 L 190 150 V 340 L 220 370 H 340" stroke="#C97B3D" stroke-width="2.5"/>
+      <g fill="#C97B3D">
+        <circle cx="220" cy="40" r="4.5"/><circle cx="260" cy="80" r="4.5"/><circle cx="300" cy="240" r="4.5"/>
+        <circle cx="160" cy="120" r="4.5"/><circle cx="190" cy="150" r="4.5"/><circle cx="220" cy="370" r="4.5"/>
+      </g>
+    </svg>
+
+    <div class="relative w-full max-w-sm">
+      <div class="border border-line-light dark:border-line rounded-xl p-7 md:p-8 bg-panel-light dark:bg-panel">
+
+        <!-- Abas Entrar / Criar conta, no mesmo estilo "pino" das categorias da montagem -->
+        <div id="auth-tabs" class="flex gap-1 mb-6 text-sm border-b border-line-light dark:border-line" role="tablist" aria-label="Entrar ou criar conta">
+          <button type="button" id="tab-entrar" class="pin-tab flex-1" role="tab" aria-selected="true">Entrar</button>
+          <button type="button" id="tab-criar" class="pin-tab flex-1" role="tab" aria-selected="false">Criar conta</button>
+        </div>
+
+        <h1 id="auth-titulo" class="font-display font-semibold text-xl mb-1">Entre na sua conta</h1>
+        <p id="auth-subtitulo" class="text-sm text-muted-light dark:text-muted mb-6">Acesse pra salvar e comparar seus builds.</p>
+
+        <!-- Mensagem de erro/sucesso -->
+        <div id="auth-mensagem" class="hidden mb-4 text-sm rounded-lg px-3 py-2" aria-live="polite"></div>
+
+        <form id="form-auth" novalidate>
+          <div id="campo-nome-wrap" class="hidden mb-4">
+            <label for="campo-nome" class="block text-sm mb-1.5">Nome</label>
+            <input type="text" id="campo-nome" name="nome" autocomplete="name" maxlength="60"
+              class="w-full rounded-lg border border-line-light dark:border-line bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-copper transition-colors"
+              placeholder="Como você quer ser chamado(a)">
+          </div>
+
+          <div class="mb-4">
+            <label for="campo-email" class="block text-sm mb-1.5">E-mail</label>
+            <input type="email" id="campo-email" name="email" required autocomplete="email"
+              class="w-full rounded-lg border border-line-light dark:border-line bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-copper transition-colors"
+              placeholder="voce@email.com">
+          </div>
+
+          <div id="campo-senha-wrap" class="mb-2">
+            <label for="campo-senha" class="block text-sm mb-1.5">Senha</label>
+            <div class="relative">
+              <input type="password" id="campo-senha" name="senha" required autocomplete="current-password" minlength="6"
+                class="w-full rounded-lg border border-line-light dark:border-line bg-bg-light dark:bg-bg px-3.5 py-2.5 pr-11 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-copper transition-colors">
+              <button type="button" id="toggle-senha" aria-label="Mostrar senha" aria-pressed="false"
+                class="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">
+                <svg id="icone-olho" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="mb-5 text-right">
+            <button type="button" id="link-esqueci" class="text-xs text-muted-light dark:text-muted hover:text-copper-light dark:hover:text-copper transition-colors underline underline-offset-2">Esqueceu a senha?</button>
+          </p>
+
+          <button type="submit" id="btn-enviar"
+            class="w-full bg-copper-light dark:bg-copper text-white font-display font-semibold text-sm px-5 py-3 rounded-lg hover:brightness-110 transition-[filter] disabled:opacity-60 disabled:cursor-not-allowed">
+            Entrar
+          </button>
+        </form>
+
+        <p id="voltar-entrar-wrap" class="hidden mt-4 text-center">
+          <button type="button" id="voltar-entrar" class="text-xs text-muted-light dark:text-muted hover:text-copper-light dark:hover:text-copper transition-colors underline underline-offset-2">Voltar para entrar</button>
+        </p>
+      </div>
+
+      <p class="mt-6 text-center text-xs text-muted-light dark:text-muted">
+        <a href="index.html" class="hover:text-ink-light dark:hover:text-ink transition-colors">← Voltar para o início</a>
+      </p>
+    </div>
+  </section>
+
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
