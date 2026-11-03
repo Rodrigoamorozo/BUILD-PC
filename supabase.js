@@ -17,10 +17,19 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // caiu no modo "peças de exemplo" (em vez de falhar em silêncio).
 let ultimoErroBanco = null;
 
+// Só as colunas que o site realmente usa. Trazer "*" baixava 151 KB; assim
+// são ~87 KB (42% menos) — e cada coluna nova aqui precisa ser usada no build.js.
+const COLUNAS_PECA = [
+  'id', 'categoria', 'nome', 'marca', 'preco',
+  'socket', 'tipo_memoria', 'potencia_w', 'desempenho_idx',
+  'comprimento_mm', 'formato', 'gpu_max_mm', 'formatos_compativeis',
+  'specs', 'imagem_url'
+].join(',');
+
 // Busca todas as peças da tabela "pecas"
 async function buscarPecas() {
   ultimoErroBanco = null;
-  const { data, error } = await db.from('pecas').select('*');
+  const { data, error } = await db.from('pecas').select(COLUNAS_PECA);
   if (error) {
     ultimoErroBanco = error.message;
     console.error('Erro ao buscar peças:', error.message);
@@ -31,7 +40,7 @@ async function buscarPecas() {
 
 // Busca só as peças de uma categoria (ex: "cpu", "placa-mae")
 async function buscarPecasPorCategoria(categoria) {
-  const { data, error } = await db.from('pecas').select('*').eq('categoria', categoria);
+  const { data, error } = await db.from('pecas').select(COLUNAS_PECA).eq('categoria', categoria);
   if (error) {
     console.error('Erro ao buscar peças:', error.message);
     return [];

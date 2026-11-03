@@ -10,9 +10,9 @@
 const CATEGORIAS = [
   { id: 'cpu', label: 'Processador' },
   { id: 'placa-mae', label: 'Placa-mãe' },
-  { id: 'memoria', label: 'Memória' },
+  { id: 'memoria', label: 'Memória', multiplo: true },
   { id: 'placa-video', label: 'Placa de vídeo' },
-  { id: 'armazenamento', label: 'Armazenamento' },
+  { id: 'armazenamento', label: 'Armazenamento', multiplo: true },
   { id: 'fonte', label: 'Fonte' },
   { id: 'gabinete', label: 'Gabinete' }
 ];
@@ -70,6 +70,86 @@ let categoriaAtiva = CATEGORIAS[0].id;
 let todasPecas = [];
 let fonteDados = { origem: 'exemplo', motivo: '' };
 
+// Busca e filtros da grade. São só de visualização: não mexem no build montado.
+let buscaAtual = '';
+let marcaAtiva = '';
+
+// ---------- 3b) Seleção (uma peça por categoria, ou várias quando a
+// categoria é marcada com multiplo: true — hoje só armazenamento) ----------
+
+// Sempre devolve lista, aceite o build guardando um objeto ou um array.
+function listaPecas(categoriaId) {
+  const valor = build[categoriaId];
+  if (!valor) return [];
+  return Array.isArray(valor) ? valor : [valor];
+}
+
+function categoriaAceitaVarias(categoriaId) {
+  const categoria = CATEGORIAS.find(cat => cat.id === categoriaId);
+  return Boolean(categoria && categoria.multiplo);
+}
+
+function pecaSelecionada(categoriaId, peca) {
+  return listaPecas(categoriaId).some(item => item.id === peca.id);
+}
+
+function alternarPeca(categoriaId, peca) {
+  const atuais = listaPecas(categoriaId);
+  const jaTem = atuais.some(item => item.id === peca.id);
+
+  if (jaTem) {
+    const restantes = atuais.filter(item => item.id !== peca.id);
+
+    if (!restantes.length) delete build[categoriaId];
+    else if (restantes.length === 1) build[categoriaId] = restantes[0];
+    else build[categoriaId] = restantes;
+
+    delete quantidades[peca.id];
+    return;
+  }
+
+  quantidades[peca.id] = 1;
+
+  if (categoriaAceitaVarias(categoriaId)) {
+    build[categoriaId] = [...atuais, peca];
+  } else {
+    build[categoriaId] = peca;
+  }
+}
+
+// Quantas unidades de cada peça (2x o mesmo pente de 16GB, por exemplo).
+const quantidades = {};
+const QTD_MAXIMA = 9;
+
+function qtdPeca(peca) {
+  const qtd = Number(quantidades[peca.id]);
+  return Number.isFinite(qtd) && qtd > 0 ? qtd : 1;
+}
+
+function aumentarQtd(categoriaId, peca) {
+  if (!pecaSelecionada(categoriaId, peca)) {
+    alternarPeca(categoriaId, peca);
+    return;
+  }
+
+  quantidades[peca.id] = Math.min(QTD_MAXIMA, qtdPeca(peca) + 1);
+  render();
+}
+
+function diminuirQtd(categoriaId, peca) {
+  if (!pecaSelecionada(categoriaId, peca)) return;
+
+  const nova = qtdPeca(peca) - 1;
+
+  if (nova <= 0) {
+    removerPeca(categoriaId, peca.id);
+    return;
+  }
+
+  quantidades[peca.id] = nova;
+  render();
+}
+
 let benchmarkConsultaAtual = 0;
 let benchmarkParAtual = '';
 
@@ -100,6 +180,18 @@ function escaparHTML(valor) {
 }
 
 // ---------- 4) Carregamento das peças ----------
+// Preços atualizados localmente (arquivo precos.js) têm prioridade sobre a
+// coluna preco do banco — assim dá para atualizar preço sem SQL e sem escrita.
+function aplicarPrecosLocais(lista) {
+  const novos = (typeof window !== 'undefined' && window.PRECOS) || null;
+  if (!novos) return lista;
+
+  return lista.map(peca => {
+    const preco = Number(novos[peca.id]);
+    return Number.isFinite(preco) && preco > 0 ? { ...peca, preco } : peca;
+  });
+}
+
 async function carregarPecas() {
   const configurado =
     typeof SUPABASE_URL !== 'undefined' &&
@@ -111,7 +203,7 @@ async function carregarPecas() {
 
       if (Array.isArray(dados) && dados.length) {
         fonteDados = { origem: 'banco', motivo: '' };
-        return dados;
+        return aplicarPrecosLocais(dados);
       }
 
       fonteDados.motivo =
@@ -126,7 +218,7 @@ async function carregarPecas() {
   }
 
   fonteDados.origem = 'exemplo';
-  return MOCK_PECAS;
+  return aplicarPrecosLocais(MOCK_PECAS);
 }
 
 function renderAvisoBanco() {
@@ -146,9 +238,9 @@ function renderAvisoBanco() {
 // ---------- 5) Compatibilidade ----------
 function checarCompatibilidade() {
   const avisos = [];
-  const { cpu, fonte } = build;
+  const cpu = build.cpu;
+  const fonte = build.fonte;
   const placaMae = build['placa-mae'];
-  const memoria = build.memoria;
 
   if (cpu && placaMae && cpu.socket !== placaMae.socket) {
     avisos.push(
@@ -156,17 +248,28 @@ function checarCompatibilidade() {
     );
   }
 
-  if (placaMae && memoria && placaMae.tipo_memoria !== memoria.tipo_memoria) {
-    avisos.push(
-      `A memória é ${memoria.tipo_memoria}, mas a placa-mãe aceita ${placaMae.tipo_memoria} — escolha uma memória compatível.`
+  // Memória aceita mais de um kit: confere TODOS, não só o primeiro.
+  const memorias = listaPecas('memoria');
+
+  if (placaMae && placaMae.tipo_memoria) {
+    const incompativel = memorias.find(
+      memoria => memoria.tipo_memoria !== placaMae.tipo_memoria
     );
+
+    if (incompativel) {
+      avisos.push(
+        `A memória é ${incompativel.tipo_memoria || 'de tipo não informado'}, mas a placa-mãe aceita ${placaMae.tipo_memoria} — escolha uma memória compatível.`
+      );
+    }
   }
 
   if (fonte) {
-    const consumoEstimado = Object.values(build).reduce(
-      (soma, peca) => soma + (Number(peca.potencia_w) || 0),
-      0
-    ) - (Number(fonte.potencia_w) || 0);
+    // Soma todas as peças escolhidas, menos a própria fonte (ela é a
+    // capacidade, não o consumo). Lista vazia soma zero.
+    const consumoEstimado = CATEGORIAS
+      .filter(cat => cat.id !== 'fonte')
+      .flatMap(cat => listaPecas(cat.id))
+      .reduce((soma, peca) => soma + potenciaEstimada(peca) * qtdPeca(peca), 0);
 
     if (consumoEstimado > Number(fonte.potencia_w) * 0.8) {
       avisos.push(
@@ -179,8 +282,19 @@ function checarCompatibilidade() {
 }
 
 // ---------- 5b) Remover peça ----------
-function removerPeca(categoriaId) {
-  delete build[categoriaId];
+// Com pecaId remove só aquela peça (armazenamento pode ter várias); sem
+// pecaId remove a categoria inteira.
+function removerPeca(categoriaId, pecaId) {
+  const atuais = listaPecas(categoriaId);
+  const removidas = pecaId ? atuais.filter(peca => peca.id === pecaId) : atuais;
+  const restantes = atuais.filter(peca => !pecaId || peca.id !== pecaId);
+
+  removidas.forEach(peca => delete quantidades[peca.id]);
+
+  if (!restantes.length) delete build[categoriaId];
+  else if (restantes.length === 1) build[categoriaId] = restantes[0];
+  else build[categoriaId] = restantes;
+
   render();
 }
 
@@ -212,7 +326,7 @@ function renderCategorias() {
 
   CATEGORIAS.forEach(cat => {
     const ativa = cat.id === categoriaAtiva;
-    const escolhida = Boolean(build[cat.id]);
+    const escolhida = listaPecas(cat.id).length > 0;
     const btn = document.createElement('button');
 
     btn.dataset.active = String(ativa);
@@ -233,6 +347,9 @@ function renderCategorias() {
 
     btn.addEventListener('click', () => {
       categoriaAtiva = cat.id;
+      // Cada categoria tem marcas diferentes: o filtro não faz sentido depois
+      // da troca. A busca é mantida, porque pode valer para a nova categoria.
+      marcaAtiva = '';
       render();
     });
 
@@ -245,10 +362,15 @@ function renderDica() {
   if (!box) return;
 
   const dica = DICAS_CATEGORIA[categoriaAtiva];
-
-  box.innerHTML = dica
-    ? `<p class="text-sm text-ink-light dark:text-ink pl-3 border-l-2 border-copper-light dark:border-copper">${escaparHTML(dica)}</p>`
+  const varias = categoriaAceitaVarias(categoriaAtiva)
+    ? `<p class="mt-2 text-xs text-cyan-light dark:text-cyan">
+         Você pode escolher mais de uma peça nesta categoria.
+       </p>`
     : '';
+
+  box.innerHTML = (dica
+    ? `<p class="text-sm text-ink-light dark:text-ink pl-3 border-l-2 border-copper-light dark:border-copper">${escaparHTML(dica)}</p>`
+    : '') + varias;
 }
 
 function renderFiltroInfo(totalNaCategoria, totalFiltrado) {
@@ -265,35 +387,208 @@ function renderFiltroInfo(totalNaCategoria, totalFiltrado) {
   }
 }
 
+// ---------- 6b) Busca, filtro por marca e link da peça ----------
+
+// Compara sem acento e sem diferença de caixa: "memoria" acha "Memória".
+function normalizarTexto(valor) {
+  return String(valor ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+// Foto da peça: usa a coluna imagem_url; se estiver vazia, cai no arquivo
+// fotos.js (fotos coletadas das lojas e casadas por nome).
+function fotoDaPeca(peca) {
+  if (peca.imagem_url) return peca.imagem_url;
+
+  const coletadas = typeof window !== 'undefined' ? window.FOTOS : null;
+  const extra = coletadas && coletadas[normalizarTexto(peca.nome)];
+
+  return extra ? extra.imagem : '';
+}
+
+
+// Lojas usadas quando a peça ainda não tem URL própria cadastrada.
+const LOJAS = [
+  { nome: 'KaBuM', link: termo => `https://www.kabum.com.br/busca/${termo}` },
+  { nome: 'Pichau', link: termo => `https://www.pichau.com.br/search?q=${termo}` },
+  { nome: 'Terabyte', link: termo => `https://www.terabyteshop.com.br/busca?str=${termo}` },
+  { nome: 'Mercado Livre', link: termo => `https://lista.mercadolivre.com.br/${termo}` },
+  { nome: 'Amazon', link: termo => `https://www.amazon.com.br/s?k=${termo}` }
+];
+
+// Lista de links de compra da peça. Se existir a coluna link_compra (ou link)
+// com uma URL, ela entra primeiro; as demais lojas continuam na lista.
+function linksPeca(peca) {
+  const termo = encodeURIComponent(
+    normalizarTexto(`${peca.marca || ''} ${peca.nome || ''}`)
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
+
+  const links = LOJAS.map(loja => ({ nome: loja.nome, url: loja.link(termo) }));
+  const direto = String(peca.link_compra || peca.link || '').trim();
+
+  if (/^https?:\/\//i.test(direto)) {
+    links.unshift({ nome: 'Loja cadastrada', url: direto });
+  }
+
+  return links;
+}
+
+// Link principal, usado no resumo do build.
+function linkPeca(peca) {
+  return linksPeca(peca)[0].url;
+}
+
+// Cada palavra digitada precisa aparecer no nome, na marca ou nas specs.
+function combinaComBusca(peca, termo) {
+  if (!termo) return true;
+
+  const alvo = normalizarTexto(
+    `${peca.nome || ''} ${peca.marca || ''} ${peca.specs || ''}`
+  );
+
+  return termo
+    .split(/\s+/)
+    .filter(Boolean)
+    .every(palavra => alvo.includes(palavra));
+}
+
+function renderFiltrosMarcas(pecasBase) {
+  const wrap = document.getElementById('filtros-marca');
+  if (!wrap) return;
+
+  const contagem = {};
+
+  pecasBase.forEach(peca => {
+    const marca = (peca.marca || '').trim() || 'Outras';
+    contagem[marca] = (contagem[marca] || 0) + 1;
+  });
+
+  const marcas = Object.entries(contagem)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt-BR'));
+
+  // A marca ativa pode ter sumido (troca de categoria ou de peça compatível).
+  if (marcaAtiva && !contagem[marcaAtiva]) marcaAtiva = '';
+
+  // Categoria com uma marca só não precisa de filtro.
+  if (marcas.length <= 1) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  const chip = (valor, rotulo, total) => {
+    const ativo = marcaAtiva === valor;
+
+    return `
+      <button type="button" data-marca="${escaparHTML(valor)}" aria-pressed="${ativo}"
+        class="rounded-full border px-3 py-1.5 transition-colors ${
+          ativo
+            ? 'border-copper-light dark:border-copper bg-copper-light dark:bg-copper text-white'
+            : 'border-line-light dark:border-line text-muted-light dark:text-muted hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink'
+        }">
+        ${escaparHTML(rotulo)} <span class="opacity-60">${total}</span>
+      </button>
+    `;
+  };
+
+  wrap.innerHTML =
+    chip('', 'Todas', pecasBase.length) +
+    marcas.map(([marca, total]) => chip(marca, marca, total)).join('');
+
+  wrap.querySelectorAll('button[data-marca]').forEach(botao => {
+    botao.addEventListener('click', () => {
+      marcaAtiva = botao.dataset.marca;
+      renderPecas();
+    });
+  });
+}
+
 function renderPecas() {
   const grid = document.getElementById('pecas-grid');
   if (!grid) return;
 
-  grid.innerHTML = '';
-
   const pecasDaCategoria = todasPecas.filter(
     p => p.categoria === categoriaAtiva
   );
-  const pecasFiltradas = filtrarCompativeis(pecasDaCategoria);
+  const compativeis = filtrarCompativeis(pecasDaCategoria);
 
-  renderFiltroInfo(pecasDaCategoria.length, pecasFiltradas.length);
+  renderFiltroInfo(pecasDaCategoria.length, compativeis.length);
+  renderFiltrosMarcas(compativeis);
+
+  const termo = normalizarTexto(buscaAtual);
+  const pecasFiltradas = compativeis
+    .filter(peca => !marcaAtiva || (peca.marca || '') === marcaAtiva)
+    .filter(peca => combinaComBusca(peca, termo));
+
+  const info = document.getElementById('resultado-info');
+  if (info) {
+    const filtrando = Boolean(termo || marcaAtiva);
+    info.classList.toggle('hidden', !filtrando);
+    info.textContent = filtrando
+      ? `${pecasFiltradas.length} de ${compativeis.length} peças` +
+        (marcaAtiva ? ` · ${marcaAtiva}` : '') +
+        (termo ? ` · “${buscaAtual.trim()}”` : '')
+      : '';
+  }
+
+  grid.innerHTML = '';
 
   if (!pecasFiltradas.length) {
+    const semCompat = compativeis.length === 0;
+
     grid.innerHTML = `
-      <p class="text-sm text-muted-light dark:text-muted col-span-full">
-        Nenhuma peça compatível encontrada — troque a peça escolhida numa categoria anterior.
-      </p>
+      <div class="col-span-full rounded-lg border border-line-light dark:border-line p-5">
+        <p class="text-sm text-muted-light dark:text-muted">
+          ${semCompat
+            ? 'Nenhuma peça compatível encontrada — troque a peça escolhida numa categoria anterior.'
+            : 'Nenhuma peça encontrada com essa busca e esse filtro.'}
+        </p>
+        ${semCompat ? '' : `
+          <button type="button" id="limpar-filtros"
+            class="mt-3 text-xs underline underline-offset-2 hover:text-copper-light dark:hover:text-copper transition-colors">
+            Limpar busca e filtros
+          </button>
+        `}
+      </div>
     `;
+
+    const limparFiltros = document.getElementById('limpar-filtros');
+    if (limparFiltros) {
+      limparFiltros.addEventListener('click', () => {
+        buscaAtual = '';
+        marcaAtiva = '';
+
+        const campo = document.getElementById('busca');
+        if (campo) campo.value = '';
+
+        const limpar = document.getElementById('limpar-busca');
+        if (limpar) limpar.classList.add('hidden');
+
+        renderPecas();
+      });
+    }
+
     return;
   }
 
   pecasFiltradas.forEach(peca => {
-    const selecionada = build[categoriaAtiva]?.id === peca.id;
-    const card = document.createElement('button');
+    const selecionada = pecaSelecionada(categoriaAtiva, peca);
+    const varias = categoriaAceitaVarias(categoriaAtiva);
+    const urlFoto = fotoDaPeca(peca);
 
-    card.type = 'button';
-    card.title = selecionada ? 'Toque para remover' : '';
-    card.className = `text-left border rounded-lg p-5 transition-colors relative ${
+    // div em vez de <button>: o card tem link dentro, e link dentro de button
+    // não é HTML válido (e quebra a navegação por teclado).
+    const card = document.createElement('div');
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    card.title = selecionada
+      ? 'Toque para remover'
+      : (varias ? 'Toque para adicionar' : 'Toque para escolher');
+    card.className = `group text-left border rounded-lg p-5 transition-colors relative cursor-pointer ${
       selecionada
         ? 'border-copper-light dark:border-copper bg-copper-light/5 dark:bg-copper/5'
         : 'border-line-light dark:border-line hover:border-copper-light dark:hover:border-copper'
@@ -303,18 +598,93 @@ function renderPecas() {
       ${selecionada ? `
         <span class="absolute top-3 right-3 w-[18px] h-[18px] rounded flex items-center justify-center bg-copper-light dark:bg-copper text-white text-[11px] leading-none" aria-hidden="true">✓</span>
       ` : ''}
+      ${urlFoto ? `
+        <img src="${escaparHTML(urlFoto)}" alt=""
+          loading="lazy" decoding="async" referrerpolicy="no-referrer"
+          class="mb-3 h-32 w-full rounded-md bg-bg-light dark:bg-bg object-contain">
+      ` : ''}
       <p class="font-mono text-[11px] text-muted-light dark:text-muted mb-1">${escaparHTML(peca.marca)}</p>
-      <h4 class="font-display font-semibold mb-2 pr-6">${escaparHTML(peca.nome)}</h4>
-      <p class="font-mono text-copper-light dark:text-copper font-semibold">${precoFmt(peca.preco)}</p>
+      <h4 class="font-display font-semibold mb-1 pr-6">${escaparHTML(peca.nome)}</h4>
+      <p class="text-xs text-muted-light dark:text-muted mb-3 min-h-[1rem]">${escaparHTML(peca.specs || '')}</p>
+
+      <div class="flex items-end justify-between gap-3">
+        <p class="font-mono text-copper-light dark:text-copper font-semibold">${precoFmt(peca.preco)}</p>
+        ${varias ? (selecionada ? `
+          <div class="flex shrink-0 items-center gap-1" role="group" aria-label="Quantidade de ${escaparHTML(peca.nome)}">
+            <button type="button" data-acao="menos" aria-label="Remover uma unidade"
+              class="h-7 w-7 rounded-md border border-line-light dark:border-line text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink">−</button>
+            <span class="w-6 text-center font-mono text-xs">${qtdPeca(peca)}</span>
+            <button type="button" data-acao="mais" aria-label="Adicionar uma unidade"
+              class="h-7 w-7 rounded-md border border-line-light dark:border-line text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink">+</button>
+          </div>
+        ` : `
+          <button type="button" data-acao="adicionar"
+            class="shrink-0 rounded-md border border-line-light dark:border-line px-2.5 py-1.5 text-xs text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink">
+            + Adicionar
+          </button>
+        `) : ''}
+      </div>
+
+      <details class="mt-3 border-t border-line-light dark:border-line pt-2">
+        <summary
+          class="inline-flex cursor-pointer list-none items-center gap-1 text-xs text-muted-light dark:text-muted underline underline-offset-2 transition-colors hover:text-copper-light dark:hover:text-copper">
+          Ver preço
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </summary>
+        <ul class="mt-2 grid grid-cols-2 gap-1">
+          ${linksPeca(peca).map(loja => `
+            <li>
+              <a href="${escaparHTML(loja.url)}" target="_blank" rel="noopener noreferrer"
+                class="block rounded px-2 py-1 text-xs text-ink-light dark:text-ink transition-colors hover:bg-bg-light dark:hover:bg-bg">
+                ${escaparHTML(loja.nome)}
+              </a>
+            </li>
+          `).join('')}
+        </ul>
+      </details>
     `;
 
+    // Foto que não carrega (link morto, hotlink bloqueado) some em silêncio.
+    const foto = card.querySelector('img');
+    if (foto) {
+      foto.addEventListener('error', () => foto.classList.add('hidden'));
+    }
+
     card.addEventListener('click', () => {
-      if (selecionada) {
-        removerPeca(categoriaAtiva);
-      } else {
-        build[categoriaAtiva] = peca;
-        render();
-      }
+      alternarPeca(categoriaAtiva, peca);
+      render();
+    });
+
+    // Como não é <button>, Enter e Espaço precisam ser tratados na mão.
+    // Se o foco estiver no menu de lojas, o card não deve reagir.
+    card.addEventListener('keydown', evento => {
+      if (evento.target !== card) return;
+      if (evento.key !== 'Enter' && evento.key !== ' ') return;
+      evento.preventDefault();
+      card.click();
+    });
+
+    // Menu de lojas: abre e fecha sem selecionar a peça sem querer.
+    const menuLojas = card.querySelector('details');
+    if (menuLojas) {
+      menuLojas.addEventListener('click', evento => evento.stopPropagation());
+    }
+
+    // Ações de quantidade (só existem nas categorias que aceitam várias peças).
+    const acoes = {
+      adicionar: () => { alternarPeca(categoriaAtiva, peca); render(); },
+      mais: () => aumentarQtd(categoriaAtiva, peca),
+      menos: () => diminuirQtd(categoriaAtiva, peca)
+    };
+
+    card.querySelectorAll('[data-acao]').forEach(botao => {
+      botao.addEventListener('click', evento => {
+        evento.stopPropagation();
+        const acao = acoes[botao.dataset.acao];
+        if (acao) acao();
+      });
     });
 
     grid.appendChild(card);
@@ -332,25 +702,50 @@ function renderResumo() {
 
   lista.innerHTML = '';
 
-  const escolhidas = CATEGORIAS.filter(cat => build[cat.id]);
+  const categoriasPreenchidas = CATEGORIAS.filter(
+    cat => listaPecas(cat.id).length > 0
+  );
+
+  // Lista plana: uma linha por peça, mesmo quando a categoria tem várias.
+  const escolhidas = CATEGORIAS.flatMap(cat =>
+    listaPecas(cat.id).map(peca => ({ categoria: cat, peca }))
+  );
 
   if (progresso) {
     progresso.innerHTML = CATEGORIAS.map(cat => {
-      const preenchido = Boolean(build[cat.id]);
+      const preenchido = listaPecas(cat.id).length > 0;
 
       return `
-        <span title="${escaparHTML(cat.label)}"
-          class="h-1.5 flex-1 rounded-sm ${
+        <button type="button" data-categoria="${escaparHTML(cat.id)}"
+          title="${escaparHTML(cat.label)}"
+          aria-label="Ir para ${escaparHTML(cat.label)}${preenchido ? ' (já tem peça escolhida)' : ''}"
+          class="group flex-1 cursor-pointer rounded-sm py-2 transition-colors">
+          <span class="block h-1.5 rounded-sm transition-colors ${
             preenchido
               ? 'bg-copper-light dark:bg-copper'
-              : 'bg-line-light dark:bg-line'
+              : 'bg-line-light dark:bg-line group-hover:bg-copper-light/60 dark:group-hover:bg-copper/60'
           }"></span>
+        </button>
       `;
     }).join('');
+
+    // Clicar no segmento leva para a categoria daquela peça.
+    progresso.querySelectorAll('button[data-categoria]').forEach(botao => {
+      botao.addEventListener('click', () => {
+        categoriaAtiva = botao.dataset.categoria;
+        marcaAtiva = '';
+        render();
+
+        const grid = document.getElementById('pecas-grid');
+        if (grid && typeof grid.scrollIntoView === 'function') {
+          grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
   }
 
   if (contagem) {
-    contagem.textContent = `${escolhidas.length}/${CATEGORIAS.length}`;
+    contagem.textContent = `${categoriasPreenchidas.length}/${CATEGORIAS.length}`;
   }
 
   if (!escolhidas.length) {
@@ -360,27 +755,50 @@ function renderResumo() {
       </li>
     `;
   } else {
-    escolhidas.forEach(cat => {
-      const peca = build[cat.id];
+    escolhidas.forEach(({ categoria, peca }) => {
       const li = document.createElement('li');
 
-      li.className = 'flex justify-between items-center gap-3';
+      li.className = 'space-y-1';
       li.innerHTML = `
-        <span class="text-muted-light dark:text-muted truncate min-w-0">${escaparHTML(peca.nome)}</span>
-        <span class="flex items-center gap-2 shrink-0">
-          <span>${precoFmt(peca.preco)}</span>
-          <button type="button"
-            title="Remover"
-            aria-label="Remover ${escaparHTML(peca.nome)}"
-            class="remover-peca-btn text-muted-light dark:text-muted hover:text-red-400 transition-colors leading-none text-base">
-            &times;
-          </button>
-        </span>
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-muted-light dark:text-muted truncate min-w-0">${escaparHTML(peca.nome)}${qtdPeca(peca) > 1
+            ? ` <span class="font-mono text-[11px] text-copper-light dark:text-copper">×${qtdPeca(peca)}</span>`
+            : ''}</span>
+          <span class="flex items-center gap-2 shrink-0">
+            <span>${precoFmt((Number(peca.preco) || 0) * qtdPeca(peca))}</span>
+            <button type="button"
+              title="Remover"
+              aria-label="Remover ${escaparHTML(peca.nome)}"
+              class="remover-peca-btn text-muted-light dark:text-muted hover:text-red-400 transition-colors leading-none text-base">
+              &times;
+            </button>
+          </span>
+        </div>
+
+        <details>
+          <summary
+            class="inline-flex cursor-pointer list-none items-center gap-1 text-[11px] text-muted-light dark:text-muted transition-colors hover:text-copper-light dark:hover:text-copper">
+            onde comprar
+            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </summary>
+          <ul class="mt-1.5 grid grid-cols-2 gap-1">
+            ${linksPeca(peca).map(loja => `
+              <li>
+                <a href="${escaparHTML(loja.url)}" target="_blank" rel="noopener noreferrer"
+                  class="block rounded px-2 py-1 text-[11px] text-ink-light dark:text-ink transition-colors hover:bg-bg-light dark:hover:bg-bg">
+                  ${escaparHTML(loja.nome)}
+                </a>
+              </li>
+            `).join('')}
+          </ul>
+        </details>
       `;
 
       li.querySelector('.remover-peca-btn').addEventListener(
         'click',
-        () => removerPeca(cat.id)
+        () => removerPeca(categoria.id, peca.id)
       );
 
       lista.appendChild(li);
@@ -388,7 +806,7 @@ function renderResumo() {
   }
 
   const total = escolhidas.reduce(
-    (soma, cat) => soma + (Number(build[cat.id].preco) || 0),
+    (soma, item) => soma + (Number(item.peca.preco) || 0) * qtdPeca(item.peca),
     0
   );
 
@@ -424,7 +842,6 @@ function renderAvisos() {
 // dessa mínima — e não existe quando o limitante natural é a própria GPU.
 // Continua sendo ESTIMATIVA: a medição real vem de benchmarks_pares.
 
-const LIMITE_ALERTA_GARGALO = 15; // % a partir do qual o aviso grande aparece
 const SEGMENTOS_MEDIDOR = 20;
 
 const NIVEIS_GARGALO = [
@@ -438,22 +855,12 @@ function nivelGargalo(percentual) {
   return NIVEIS_GARGALO.find(nivel => percentual <= nivel.ate);
 }
 
-// CPU mínima (no índice do catálogo) para cada faixa de GPU, calibrada para
-// 1080p: abaixo disso a CPU vira o limitante antes da placa.
-const FAIXAS_CPU_MINIMA = [
-  { ateGpu: 30, cpuMinima: 42 },
-  { ateGpu: 45, cpuMinima: 50 },
-  { ateGpu: 60, cpuMinima: 58 },
-  { ateGpu: 75, cpuMinima: 65 },
-  { ateGpu: 88, cpuMinima: 78 },
-  { ateGpu: Infinity, cpuMinima: 88 }
-];
-
+// CPU mínima (no índice do catálogo) para cada faixa de GPU, em 1080p.
+// Calibrada para a escala atual: 4060 ≈ 23 pede um Ryzen 5 5600 (55);
+// 4070 ≈ 38 pede 7600 (64); 5080 ≈ 77 pede 7800X3D (86); 5090 = 100 pede 9800X3D (98).
 function cpuMinimaParaGpu(idxGpu) {
-  const faixa = FAIXAS_CPU_MINIMA.find(item => idxGpu <= item.ateGpu);
-  return faixa
-    ? faixa.cpuMinima
-    : FAIXAS_CPU_MINIMA[FAIXAS_CPU_MINIMA.length - 1].cpuMinima;
+  const indice = Number(idxGpu) || 0;
+  return Math.round(Math.min(99, Math.max(45, 45 + 0.53 * indice)));
 }
 
 // Aceita as duas grafias da coluna: desempenho_idx (atual) e desempenho
@@ -537,34 +944,76 @@ function percentualFmt(valor) {
   return Number(valor).toFixed(1).replace('.', ',') + '%';
 }
 
-// Aviso grande no topo da grade: só aparece quando o processador fica bem
-// abaixo do que a placa de vídeo pede.
-function renderGargaloAlerta() {
-  const box = document.getElementById('gargalo-alerta');
-  if (!box) return;
+// Sugestão de troca: CPU que resolve o déficit (mesmo socket, a mais barata)
+// ou, quando está tudo bem, até qual placa a CPU escolhida aguenta.
+function sugestaoHTML(dados) {
+  const cpu = dados.cpu;
+  const gpu = dados.gpu;
 
-  const dados = calcularGargalo();
+  if (dados.percentual > 8) {
+    const placaMae = build['placa-mae'];
+    const socketAlvo = (placaMae && placaMae.socket) || cpu.socket;
 
-  if (!dados || dados.faltando || dados.percentual <= LIMITE_ALERTA_GARGALO) {
-    box.classList.add('hidden');
-    box.innerHTML = '';
-    return;
+    const opcao = todasPecas
+      .filter(peca => peca.categoria === 'cpu' && peca.id !== cpu.id)
+      .filter(peca => !socketAlvo || peca.socket === socketAlvo)
+      .filter(peca => (indiceDesempenho(peca) || 0) >= dados.cpuMinima)
+      .sort((a, b) => (Number(a.preco) || 0) - (Number(b.preco) || 0))[0];
+
+    if (!opcao) {
+      return `
+        <p class="mt-3 border-t border-line-light pt-3 text-xs text-muted-light dark:border-line dark:text-muted">
+          Nenhum processador do catálogo com esse socket resolve —
+          seria preciso trocar também a placa-mãe.
+        </p>
+      `;
+    }
+
+    return `
+      <button type="button" data-sugerir="cpu" data-id="${escaparHTML(opcao.id)}"
+        class="mt-3 block w-full rounded-md border border-line-light px-3 py-2 text-left transition-colors hover:border-copper-light dark:border-line dark:hover:border-copper">
+        <span class="block text-xs text-muted-light dark:text-muted">Troca que resolve</span>
+        <span class="font-semibold">${escaparHTML(opcao.nome)}</span>
+        <span class="font-mono text-xs text-muted-light dark:text-muted">(${indiceFmt(indiceDesempenho(opcao))})</span>
+        <span class="font-mono text-xs">· ${precoFmt(opcao.preco)}</span>
+      </button>
+    `;
   }
 
-  box.classList.remove('hidden');
-  box.innerHTML = `
-    <p class="font-display font-semibold text-sm mb-1.5">
-      Processador abaixo do recomendado para esta placa
-    </p>
-    <p class="text-sm text-muted-light dark:text-muted leading-relaxed">
-      O <strong class="text-ink-light dark:text-ink">${escaparHTML(dados.cpu.nome)}</strong>
-      fica cerca de <strong class="text-ink-light dark:text-ink">${percentualFmt(dados.percentual)}</strong>
-      abaixo do índice mínimo que acompanha a
-      <strong class="text-ink-light dark:text-ink">${escaparHTML(dados.gpu.nome)}</strong>
-      (${indiceFmt(dados.cpuMinima)}). Na prática, é ele que tende a segurar o PC,
-      principalmente em resoluções mais baixas. ${textoNivel(dados)}
-    </p>
-  `;
+  if (dados.percentual === 0) {
+    const caso = build.gabinete;
+    const idxAtual = indiceDesempenho(gpu) || 0;
+
+    const melhor = todasPecas
+      .filter(peca => peca.categoria === 'placa-video' && peca.id !== gpu.id)
+      .filter(peca => {
+        const indice = indiceDesempenho(peca);
+        if (!indice || indice <= idxAtual) return false;
+        if (dados.idxCpu < cpuMinimaParaGpu(indice)) return false;
+
+        // Se já há gabinete escolhido, respeita o comprimento máximo.
+        if (caso && caso.gpu_max_mm && peca.comprimento_mm) {
+          if (Number(peca.comprimento_mm) > Number(caso.gpu_max_mm)) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => indiceDesempenho(b) - indiceDesempenho(a))[0];
+
+    if (!melhor) return '';
+
+    return `
+      <button type="button" data-sugerir="placa-video" data-id="${escaparHTML(melhor.id)}"
+        class="mt-3 block w-full rounded-md border border-line-light px-3 py-2 text-left transition-colors hover:border-copper-light dark:border-line dark:hover:border-copper">
+        <span class="block text-xs text-muted-light dark:text-muted">Sua CPU leva até</span>
+        <span class="font-semibold">${escaparHTML(melhor.nome)}</span>
+        <span class="font-mono text-xs text-muted-light dark:text-muted">(${indiceFmt(indiceDesempenho(melhor))})</span>
+        <span class="font-mono text-xs">· ${precoFmt(melhor.preco)}</span>
+      </button>
+    `;
+  }
+
+  return '';
 }
 
 async function renderGargalo() {
@@ -615,30 +1064,34 @@ async function renderGargalo() {
 
       <div class="space-y-4 mb-4">
         ${medidorHTML('Seu processador', dados.idxCpu, 'bg-copper-light dark:bg-copper')}
-        ${medidorHTML('CPU recomendada para esta placa', dados.cpuMinima, 'bg-cyan-light dark:bg-cyan')}
+        ${medidorHTML('Sua placa de vídeo pede', dados.cpuMinima, 'bg-cyan-light dark:bg-cyan')}
       </div>
 
-      ${dados.percentual > 0
+      ${dados.percentual === 0
         ? `<p class="text-sm mb-2">
-            Déficit de <strong class="font-mono">${percentualFmt(dados.percentual)}</strong>
-            — o processador está abaixo do recomendado
-          </p>`
-        : `<p class="text-sm mb-2">
-            Processador suficiente para esta placa
+            Suficiente para essa placa
             <strong class="font-mono">(${indiceFmt(dados.idxCpu)} ≥ ${indiceFmt(dados.cpuMinima)})</strong>
-            — o limitante tende a ser a placa de vídeo
-          </p>`}
+          </p>`
+        : dados.percentual <= 8
+          ? `<p class="text-sm mb-2">
+              Quase no mínimo — equilíbrio aceitável
+              <strong class="font-mono">(${indiceFmt(dados.idxCpu)} de ${indiceFmt(dados.cpuMinima)})</strong>
+            </p>`
+          : `<p class="text-sm mb-2">
+              Déficit de <strong class="font-mono">${percentualFmt(dados.percentual)}</strong>
+              — abaixo do mínimo
+            </p>`}
 
-      ${dados.percentual > 0
+      ${dados.percentual > 8
         ? `<p class="text-sm text-muted-light dark:text-muted leading-relaxed">
             ${textoNivel(dados)}
           </p>`
         : ''}
 
+      ${sugestaoHTML(dados)}
+
       <p class="text-xs text-muted-light dark:text-muted leading-relaxed mt-4 pt-4 border-t border-line-light dark:border-line">
-        Estimativa: cada faixa de placa de vídeo pede um processador mínimo para
-        não ser limitada em 1080p. O resultado real muda por jogo, resolução e
-        qualidade gráfica — isto não é medição.
+        Estimativa em 1080p. Muda por jogo e resolução.
       </p>
     `;
   }
@@ -649,6 +1102,19 @@ async function renderGargalo() {
     ${conteudo}
     <div id="benchmark-painel" class="mt-5 pt-5 border-t border-line-light dark:border-line"></div>
   `;
+
+  // Clicar na sugestão aplica a peça no build.
+  box.querySelectorAll('[data-sugerir]').forEach(botao => {
+    botao.addEventListener('click', () => {
+      const categoria = botao.dataset.sugerir;
+      const peca = todasPecas.find(item => item.id === botao.dataset.id);
+      if (!peca) return;
+
+      build[categoria] = peca;
+      quantidades[peca.id] = 1;
+      render();
+    });
+  });
 
   const alvo = box.querySelector('#benchmark-painel');
   if (alvo) await renderBenchmarks(alvo, cpu, gpu, token);
@@ -893,16 +1359,372 @@ function render() {
   renderResumo();
   renderAvisos();
 
-  // Calcula a estimativa de gargalo do par e, se houver, o benchmark medido.
+  // Estimativa de gargalo do par + benchmark medido (quando existir).
   renderGargalo();
-
-  // Aviso grande no topo: só quando o desequilíbrio passa de 15%.
-  renderGargaloAlerta();
 }
+
+// ---------- 10b) Busca: campo de texto ligado à grade ----------
+// Só registra os eventos. Ao digitar, redesenha apenas a grade — assim o
+// cursor não sai do campo e a página não pisca.
+(function ligarBusca() {
+  const campo = document.getElementById('busca');
+  const limpar = document.getElementById('limpar-busca');
+
+  if (campo) {
+    campo.addEventListener('input', () => {
+      buscaAtual = campo.value;
+      if (limpar) limpar.classList.toggle('hidden', !campo.value);
+      renderPecas();
+    });
+  }
+
+  if (limpar) {
+    limpar.addEventListener('click', () => {
+      if (campo) {
+        campo.value = '';
+        campo.focus();
+      }
+      buscaAtual = '';
+      limpar.classList.add('hidden');
+      renderPecas();
+    });
+  }
+})();
+
+// ---------- 10c) Modelos, orçamento, salvar e compartilhar ----------
+
+// Orçamentos usados nos modelos prontos.
+const MODELOS = [
+  { nome: '1080p entrada', valor: 4000 },
+  { nome: '1080p high', valor: 6000 },
+  { nome: '1440p', valor: 9000 },
+  { nome: '4K', valor: 16000 },
+  { nome: 'Top', valor: 25000 },
+  { nome: 'Sem limite', valor: 40000 }
+];
+
+const CHAVE_BUILDS = 'pcbuild:builds';
+
+function maisBarato(lista, filtro) {
+  let escolhido = null;
+
+  lista.forEach(item => {
+    if (filtro && !filtro(item)) return;
+    if (!escolhido || Number(item.preco) < Number(escolhido.preco)) escolhido = item;
+  });
+
+  return escolhido;
+}
+
+function cabeNoGabinete(gabinete, gpu, placaMae) {  if (gabinete.gpu_max_mm && gpu.comprimento_mm) {
+    if (Number(gpu.comprimento_mm) > Number(gabinete.gpu_max_mm)) return false;
+  }
+
+  if (placaMae && placaMae.formato) {
+    const formatos = String(gabinete.formatos_compativeis || gabinete.formato || '').toLowerCase();
+    if (formatos && !formatos.includes(String(placaMae.formato).toLowerCase())) return false;
+  }
+
+  return true;
+}
+
+// Capacidade em GB lida do nome ("16GB (2x8)" -> 16, "1TB" -> 1024).
+function capacidadeGB(peca) {
+  const achado = String(peca.nome || '').match(/(\d+)\s*(GB|TB)/i);
+  if (!achado) return 0;
+
+  const valor = Number(achado[1]);
+  return /TB/i.test(achado[2]) ? valor * 1024 : valor;
+}
+
+// Potência em watts. Quando a coluna está vazia no catálogo, estima pelo
+// índice — hoje 26 das 45 placas não têm potencia_w preenchida.
+function potenciaEstimada(peca) {
+  const informada = Number(peca.potencia_w);
+  if (Number.isFinite(informada) && informada > 0) return informada;
+
+  const idx = indiceDesempenho(peca) || 0;
+
+  if (peca.categoria === 'placa-video') {
+    if (idx >= 95) return 575;
+    if (idx >= 85) return 400;
+    if (idx >= 75) return 320;
+    if (idx >= 60) return 250;
+    if (idx >= 45) return 200;
+    if (idx >= 30) return 160;
+    if (idx >= 20) return 120;
+    return 100;
+  }
+
+  if (idx >= 85) return 170;
+  if (idx >= 70) return 125;
+  if (idx >= 45) return 90;
+  return 65;
+}
+
+// Procura o conjunto que entrega a melhor placa de vídeo dentro do orçamento,
+// respeitando socket, tipo de memória, tamanho do gabinete e folga da fonte.
+// Tem piso de qualidade: 16GB de RAM, 480GB de SSD e fonte com folga real.
+function montarComOrcamento(orcamento) {
+  const porCategoria = categoria => todasPecas.filter(
+    peca => peca.categoria === categoria && Number(peca.preco) > 0
+  );
+
+  const cpus = porCategoria('cpu');
+  const placas = porCategoria('placa-mae');
+  const memorias = porCategoria('memoria').filter(m => capacidadeGB(m) >= 16);
+  const gpus = porCategoria('placa-video');
+  const ssds = porCategoria('armazenamento').filter(s => capacidadeGB(s) >= 480);
+  const fontes = porCategoria('fonte');
+  const gabinetes = porCategoria('gabinete');
+
+  let melhor = null;
+
+  gpus.forEach(gpu => {
+    const idxGpu = indiceDesempenho(gpu);
+    if (!idxGpu) return;
+
+    // O teto do orçamento já limita a placa; aqui só evitamos que ela
+    // consuma tudo e sobre pouco para o resto (com pisos de qualidade abaixo).
+    if (Number(gpu.preco) > orcamento * 0.85) return;
+
+    cpus.forEach(cpu => {
+      const idxCpu = indiceDesempenho(cpu);
+      const exigida = Math.min(99, cpuMinimaParaGpu(idxGpu) + 3);
+      if (!idxCpu || idxCpu < exigida) return;
+
+      const placaMae = maisBarato(placas, p => p.socket === cpu.socket && p.tipo_memoria);
+      if (!placaMae) return;
+
+      const memoria = maisBarato(memorias, m => m.tipo_memoria === placaMae.tipo_memoria);
+      if (!memoria) return;
+
+      const gabinete = maisBarato(gabinetes, g => cabeNoGabinete(g, gpu, placaMae));
+      if (!gabinete) return;
+
+      const consumo = potenciaEstimada(cpu) + potenciaEstimada(gpu);
+      const fonte = maisBarato(fontes, f => Number(f.potencia_w) >= consumo * 1.2 + 100);
+      if (!fonte) return;
+
+      const ssd = maisBarato(ssds);
+      if (!ssd) return;
+
+      const pecas = {
+        cpu,
+        'placa-mae': placaMae,
+        memoria,
+        'placa-video': gpu,
+        armazenamento: ssd,
+        gabinete,
+        fonte
+      };
+
+      const total = Object.values(pecas).reduce((soma, p) => soma + Number(p.preco), 0);
+      if (total > orcamento) return;
+
+      if (!melhor || idxGpu > melhor.idxGpu || (idxGpu === melhor.idxGpu && total < melhor.total)) {
+        melhor = { idxGpu, total, pecas };
+      }
+    });
+  });
+
+  return melhor;
+}
+
+function avisarOrcamento(texto) {
+  const el = document.getElementById('orcamento-msg');
+  if (el) el.textContent = texto;
+}
+
+function aplicarBuild(pecas) {
+  Object.keys(build).forEach(chave => delete build[chave]);
+  Object.keys(quantidades).forEach(chave => delete quantidades[chave]);
+
+  Object.entries(pecas).forEach(([categoria, peca]) => {
+    build[categoria] = peca;
+    quantidades[peca.id] = 1;
+  });
+
+  categoriaAtiva = 'cpu';
+  marcaAtiva = '';
+  render();
+}
+
+function montarPara(valor) {
+  const resultado = montarComOrcamento(valor);
+
+  if (!resultado) {
+    avisarOrcamento(`Não achei combinação compatível até ${precoFmt(valor)}.`);
+    return;
+  }
+
+  aplicarBuild(resultado.pecas);
+  avisarOrcamento(`Montado por ${precoFmt(resultado.total)}.`);
+}
+
+// ---------- salvar / compartilhar ----------
+
+function serializarBuild() {
+  const dados = {};
+
+  CATEGORIAS.forEach(cat => {
+    const pecas = listaPecas(cat.id);
+    if (!pecas.length) return;
+    dados[cat.id] = pecas.map(peca => ({ id: peca.id, qtd: qtdPeca(peca) }));
+  });
+
+  return dados;
+}
+
+function aplicarDados(dados) {
+  Object.keys(build).forEach(chave => delete build[chave]);
+  Object.keys(quantidades).forEach(chave => delete quantidades[chave]);
+
+  CATEGORIAS.forEach(cat => {
+    const itens = dados[cat.id] || [];
+    const pecas = itens
+      .map(item => todasPecas.find(p => p.id === item.id))
+      .filter(Boolean);
+
+    if (!pecas.length) return;
+
+    build[cat.id] = pecas.length === 1 ? pecas[0] : pecas;
+
+    pecas.forEach(peca => {
+      const item = itens.find(i => i.id === peca.id);
+      quantidades[peca.id] = Math.max(1, Number(item && item.qtd) || 1);
+    });
+  });
+
+  render();
+}
+
+function buildsSalvos() {
+  try {
+    return JSON.parse(localStorage.getItem(CHAVE_BUILDS)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function salvarBuild() {
+  const dados = serializarBuild();
+
+  if (!Object.keys(dados).length) {
+    avisarOrcamento('Monte alguma peça antes de salvar.');
+    return;
+  }
+
+  const nome = prompt('Nome do build:', `Build ${new Date().toLocaleDateString('pt-BR')}`);
+  if (!nome) return;
+
+  const lista = buildsSalvos();
+  lista.unshift({ nome, data: new Date().toISOString(), dados });
+  localStorage.setItem(CHAVE_BUILDS, JSON.stringify(lista.slice(0, 20)));
+
+  renderBuildsSalvos();
+  avisarOrcamento('Build salvo neste navegador.');
+}
+
+function renderBuildsSalvos() {
+  const select = document.getElementById('builds-salvos');
+  if (!select) return;
+
+  const lista = buildsSalvos();
+
+  select.innerHTML = '<option value="">Builds salvos…</option>' +
+    lista.map((item, indice) => `<option value="${indice}">${escaparHTML(item.nome)}</option>`).join('');
+}
+
+function compartilharBuild() {
+  const dados = serializarBuild();
+
+  if (!Object.keys(dados).length) {
+    avisarOrcamento('Monte alguma peça antes de compartilhar.');
+    return;
+  }
+
+  const codigo = btoa(encodeURIComponent(JSON.stringify(dados)));
+  const url = `${location.href.split('#')[0]}#b=${codigo}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(
+      () => avisarOrcamento('Link copiado.'),
+      () => prompt('Copie o link:', url)
+    );
+  } else {
+    prompt('Copie o link:', url);
+  }
+}
+
+// Link compartilhado: o build inteiro viaja na URL (#b=...), sem banco.
+function lerLinkCompartilhado() {
+  const achado = location.hash.match(/#b=(.+)$/);
+  if (!achado) return false;
+
+  try {
+    aplicarDados(JSON.parse(decodeURIComponent(atob(achado[1]))));
+    return true;
+  } catch (erro) {
+    console.warn('Link de build inválido.', erro);
+    return false;
+  }
+}
+
+function renderModelos() {
+  const wrap = document.getElementById('modelos');
+  if (!wrap) return;
+
+  wrap.innerHTML = MODELOS.map(modelo => `
+    <button type="button" data-valor="${modelo.valor}"
+      class="rounded-full border border-line-light dark:border-line px-3 py-1.5 text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink">
+      ${modelo.nome} · ${precoFmt(modelo.valor)}
+    </button>
+  `).join('');
+
+  wrap.querySelectorAll('button').forEach(botao => {
+    botao.addEventListener('click', () => montarPara(Number(botao.dataset.valor)));
+  });
+}
+
+(function ligarFerramentas() {
+  const btnOrcamento = document.getElementById('btn-orcamento');
+  const campo = document.getElementById('orcamento');
+
+  if (btnOrcamento) {
+    btnOrcamento.addEventListener('click', () => {
+      const valor = Number(campo && campo.value);
+      if (!valor || valor < 500) {
+        avisarOrcamento('Digite um orçamento válido.');
+        return;
+      }
+      montarPara(valor);
+    });
+  }
+
+  const btnSalvar = document.getElementById('btn-salvar');
+  if (btnSalvar) btnSalvar.addEventListener('click', salvarBuild);
+
+  const btnCompartilhar = document.getElementById('btn-compartilhar');
+  if (btnCompartilhar) btnCompartilhar.addEventListener('click', compartilharBuild);
+
+  const select = document.getElementById('builds-salvos');
+  if (select) {
+    select.addEventListener('change', () => {
+      if (select.value === '') return;
+
+      const item = buildsSalvos()[Number(select.value)];
+      if (item) aplicarDados(item.dados);
+    });
+  }
+})();
 
 // ---------- 11) Inicialização ----------
 (async function init() {
   todasPecas = await carregarPecas();
   renderAvisoBanco();
   render();
+  renderModelos();
+  renderBuildsSalvos();
+  lerLinkCompartilhado();
 })();

@@ -14,6 +14,13 @@ a:focus-visible, button:focus-visible {
   outline-offset: 2px;
 }
 
+/* Cards de peça são div com role="button" (têm um link dentro), então não
+   entram nas regras acima e precisam do mesmo foco visível. */
+[role="button"]:focus-visible {
+  outline: 2px solid #63D9CC;
+  outline-offset: 2px;
+}
+
 /* Aba de categoria estilo "conector de placa-mãe": ponto aceso (LED)
    acima da aba ativa, linha embaixo preenchida quando há peça escolhida. */
 .pin-tab {
@@ -45,6 +52,12 @@ a:focus-visible, button:focus-visible {
   flex: 1 1 0;
   border-radius: 1px;
 }
+
+/* "Ver preço" é um <details>: esconde o triângulo padrão do summary para
+   ficar com cara de link, e destaca quando o menu está aberto. */
+summary { list-style: none; }
+summary::-webkit-details-marker { display: none; }
+details[open] > summary { opacity: 0.75; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
