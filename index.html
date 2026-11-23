@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A0D12">
+<meta name="description" content="O BuildPC confere se as peças do seu computador combinam entre si e mostra o valor total conforme você monta.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="BuildPC — Monte seu PC">
+<meta property="og:description" content="O BuildPC confere se as peças do seu computador combinam entre si e mostra o valor total conforme você monta.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='5' fill='%23241ec9'/%3E%3Cg fill='white'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='16' cy='10' r='2'/%3E%3Ccircle cx='22' cy='10' r='2'/%3E%3Ccircle cx='10' cy='16' r='2'/%3E%3Ccircle cx='16' cy='16' r='2'/%3E%3Ccircle cx='22' cy='16' r='2'/%3E%3Ccircle cx='10' cy='22' r='2'/%3E%3Ccircle cx='16' cy='22' r='2'/%3E%3Ccircle cx='22' cy='22' r='2'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>try{var t=localStorage.getItem('buildpc:tema');var claro=t?t==='claro':window.matchMedia('(prefers-color-scheme: light)').matches;document.documentElement.classList.toggle('dark',!claro);}catch(e){}</script>
 <title>BuildPC — Monte seu PC</title>
 
 <!-- Tailwind via CDN (gera o CSS por JS — não existe build estático sem internet neste ambiente) -->
@@ -17,35 +24,43 @@
 <!-- CSS próprio, separado do HTML -->
 <link rel="stylesheet" href="style.css">
 <!-- Supabase (para o menu da conta) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="supabase.js"></script>
 </head>
 
 <body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300">
 
+  <a href="#conteudo" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-copper-light focus:px-4 focus:py-2 focus:text-sm focus:text-white">Pular para o conteúdo</a>
+
   <!-- ====== MENU DO TOPO ====== -->
   <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light dark:border-line backdrop-blur bg-bg-light/85 dark:bg-bg/85">
-    <span class="flex items-center gap-2 font-display font-semibold text-[15px]">
-      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <rect x="6" y="6" width="12" height="12" rx="1.5"/>
-        <rect x="10" y="10" width="4" height="4"/>
-        <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
+    <span class="flex items-center gap-2.5 font-display text-[20px] tracking-tight">
+      <svg class="w-[30px] h-[30px] shrink-0 text-copper-light dark:text-accent" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect x="2" y="2" width="28" height="28" rx="5" fill="currentColor"/>
+        <path d="M2 2h9L2 11z" fill="#0A0D12" opacity=".35"/>
+        <g fill="#fff">
+          <circle cx="10" cy="10" r="1.9"/><circle cx="16" cy="10" r="1.9"/><circle cx="22" cy="10" r="1.9"/>
+          <circle cx="10" cy="16" r="1.9"/><circle cx="16" cy="16" r="1.9"/><circle cx="22" cy="16" r="1.9"/>
+          <circle cx="10" cy="22" r="1.9"/><circle cx="16" cy="22" r="1.9"/><circle cx="22" cy="22" r="1.9"/>
+        </g>
       </svg>
-      BuildPC
+      <span><span class="font-normal opacity-80">Build</span><span class="font-bold">PC</span></span>
     </span>
 
-    <div class="flex items-center gap-6 text-sm">
+    <div class="flex items-center gap-4 text-sm sm:gap-6">
+      <a href="buildpc.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Montar PC</a>
       <a href="guia.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Guia</a>
       <div id="conta-area" class="relative flex items-center">
         <a href="login.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Entrar</a>
       </div>
       <button id="theme-btn"
-      class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-copper transition-colors">
+      class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-accent transition-colors">
       <span id="theme-label">Modo claro</span>
     </button>
     </div>
   </nav>
 
+  <main id="conteudo">
   <!-- ====== SEÇÃO PRINCIPAL (HERO) ====== -->
   <section class="relative px-6 md:px-[6vw] pt-20 pb-24 overflow-hidden">
     <!-- Trilhas de cobre de placa-mãe: único elemento decorativo grande da
@@ -67,7 +82,7 @@
     <div class="relative max-w-3xl">
     <h1 class="font-display font-semibold text-[clamp(34px,6vw,64px)] leading-[1.08] tracking-tight mb-6">
       Cada peça no lugar
-      <span class="text-copper-light dark:text-copper">certo</span>,
+      <span class="text-copper-light dark:text-accent">certo</span>,
       antes de você comprar.
     </h1>
 
@@ -102,11 +117,11 @@
 
     <div class="steps grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
       <div class="step">
-        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-copper text-copper-light dark:text-copper mb-5">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <rect x="6" y="6" width="12" height="12" rx="1.5"/>
-            <rect x="10" y="10" width="4" height="4"/>
-            <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
+        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-accent text-copper-light dark:text-accent mb-5">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="5" y="5" width="14" height="14" rx="2"/>
+            <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>
+            <path d="M9 9h6v6H9z" fill="currentColor" fill-opacity=".25"/>
           </svg>
         </div>
         <h3 class="font-display font-semibold text-lg mb-3">Escolha as peças</h3>
@@ -115,10 +130,11 @@
         </p>
       </div>
       <div class="step">
-        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-copper text-copper-light dark:text-copper mb-5">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <path d="M9 12l2 2 4-4"/>
-            <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
+        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-accent text-copper-light dark:text-accent mb-5">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 9h6a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H3z"/>
+            <path d="M21 9h-6a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h6z"/>
+            <path d="M8 18l2.5 2.5L16 15" stroke="#63D9CC"/>
           </svg>
         </div>
         <h3 class="font-display font-semibold text-lg mb-3">Compatibilidade automática</h3>
@@ -127,10 +143,11 @@
         </p>
       </div>
       <div class="step">
-        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-copper text-copper-light dark:text-copper mb-5">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <rect x="4" y="4" width="16" height="11" rx="1.2"/>
-            <path d="M9 20h6M12 15v5"/>
+        <div class="step-node w-10 h-10 flex items-center justify-center rounded-md border-[1.5px] border-copper-light dark:border-accent text-copper-light dark:text-accent mb-5">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4" y="3" width="16" height="18" rx="2"/>
+            <path d="M8 8h8M8 12h8M8 17h3"/>
+            <path d="M14 17h2" stroke="#63D9CC"/>
           </svg>
         </div>
         <h3 class="font-display font-semibold text-lg mb-3">Veja seu build pronto</h3>
@@ -141,13 +158,15 @@
     </div>
   </section>
 
+  </main>
+
   <!-- ====== RODAPÉ ====== -->
   <footer class="px-6 md:px-[6vw] py-6 border-t border-line-light dark:border-line text-xs text-muted-light dark:text-muted">
     © 2026 BuildPC
   </footer>
 
   <!-- Lógica própria, separada do HTML -->
-  <script src="conta.js"></script>
-  <script src="script.js"></script>
+  <script defer src="conta.js"></script>
+  <script defer src="script.js"></script>
 </body>
 </html>

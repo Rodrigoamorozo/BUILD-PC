@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A0D12">
+<meta name="description" content="Atualize seu nome e sua senha no BuildPC.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="BuildPC — Editar perfil">
+<meta property="og:description" content="Atualize seu nome e sua senha no BuildPC.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='5' fill='%23241ec9'/%3E%3Cg fill='white'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='16' cy='10' r='2'/%3E%3Ccircle cx='22' cy='10' r='2'/%3E%3Ccircle cx='10' cy='16' r='2'/%3E%3Ccircle cx='16' cy='16' r='2'/%3E%3Ccircle cx='22' cy='16' r='2'/%3E%3Ccircle cx='10' cy='22' r='2'/%3E%3Ccircle cx='16' cy='22' r='2'/%3E%3Ccircle cx='22' cy='22' r='2'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>try{var t=localStorage.getItem('buildpc:tema');var claro=t?t==='claro':window.matchMedia('(prefers-color-scheme: light)').matches;document.documentElement.classList.toggle('dark',!claro);}catch(e){}</script>
 <title>BuildPC — Editar perfil</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -16,34 +23,41 @@
 <link rel="stylesheet" href="style.css">
 
 <!-- Biblioteca do Supabase (conta e perfil) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="supabase.js"></script>
 </head>
 
 <body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300 min-h-screen">
 
+  <a href="#conteudo" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-copper-light focus:px-4 focus:py-2 focus:text-sm focus:text-white">Pular para o conteúdo</a>
+
   <nav class="sticky top-0 z-50 flex items-center justify-between px-6 md:px-[6vw] py-5 border-b border-line-light dark:border-line backdrop-blur bg-bg-light/85 dark:bg-bg/85">
-    <a href="index.html" class="flex items-center gap-2 font-display font-semibold text-[15px]">
-      <svg class="w-[18px] h-[18px] text-copper-light dark:text-copper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <rect x="6" y="6" width="12" height="12" rx="1.5"/>
-        <rect x="10" y="10" width="4" height="4"/>
-        <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>
+    <a href="index.html" class="flex items-center gap-2.5 font-display text-[20px] tracking-tight">
+      <svg class="w-[30px] h-[30px] shrink-0 text-copper-light dark:text-accent" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect x="2" y="2" width="28" height="28" rx="5" fill="currentColor"/>
+        <path d="M2 2h9L2 11z" fill="#0A0D12" opacity=".35"/>
+        <g fill="#fff">
+          <circle cx="10" cy="10" r="1.9"/><circle cx="16" cy="10" r="1.9"/><circle cx="22" cy="10" r="1.9"/>
+          <circle cx="10" cy="16" r="1.9"/><circle cx="16" cy="16" r="1.9"/><circle cx="22" cy="16" r="1.9"/>
+          <circle cx="10" cy="22" r="1.9"/><circle cx="16" cy="22" r="1.9"/><circle cx="22" cy="22" r="1.9"/>
+        </g>
       </svg>
-      BuildPC
+      <span><span class="font-normal opacity-80">Build</span><span class="font-bold">PC</span></span>
     </a>
-    <div class="flex items-center gap-6 text-sm">
+    <div class="flex items-center gap-4 text-sm sm:gap-6">
+      <a href="buildpc.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Montar PC</a>
       <a href="guia.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Guia</a>
       <div id="conta-area" class="relative flex items-center">
         <a href="login.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Entrar</a>
       </div>
       <button id="theme-btn"
-        class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-copper transition-colors">
+        class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-accent transition-colors">
         <span id="theme-label">Modo claro</span>
       </button>
     </div>
   </nav>
 
-  <main class="px-6 py-14 md:py-20 flex justify-center">
+  <main id="conteudo" class="px-6 py-14 md:py-20 flex justify-center">
     <!-- Fica escondido até confirmar que a pessoa está logada -->
     <div id="perfil-card" class="hidden w-full max-w-md space-y-6">
       <div>
@@ -58,13 +72,13 @@
           <div class="mb-4">
             <label for="perfil-email" class="block text-sm mb-1.5">E-mail</label>
             <input type="email" id="perfil-email" readonly aria-describedby="perfil-email-ajuda"
-              class="w-full rounded-lg border border-line-light dark:border-line bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm opacity-70 cursor-not-allowed outline-none">
+              class="w-full rounded-lg border border-field-light dark:border-field bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm opacity-70 cursor-not-allowed outline-none">
             <p id="perfil-email-ajuda" class="mt-1.5 text-xs text-muted-light dark:text-muted">O e-mail é o seu login e não pode ser alterado aqui.</p>
           </div>
           <div class="mb-5">
             <label for="perfil-nome" class="block text-sm mb-1.5">Nome</label>
             <input type="text" id="perfil-nome" name="nome" autocomplete="name" maxlength="60"
-              class="w-full rounded-lg border border-line-light dark:border-line bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-copper transition-colors"
+              class="w-full rounded-lg border border-field-light dark:border-field bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-accent transition-colors"
               placeholder="Como você quer ser chamado(a)">
           </div>
           <button type="submit" id="btn-perfil"
@@ -81,15 +95,15 @@
           <div class="mb-4">
             <label for="senha-nova" class="block text-sm mb-1.5">Nova senha</label>
             <input type="password" id="senha-nova" name="nova-senha" autocomplete="new-password" minlength="6"
-              class="w-full rounded-lg border border-line-light dark:border-line bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-copper transition-colors">
+              class="w-full rounded-lg border border-field-light dark:border-field bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-accent transition-colors">
           </div>
           <div class="mb-5">
             <label for="senha-confirma" class="block text-sm mb-1.5">Confirmar nova senha</label>
             <input type="password" id="senha-confirma" name="confirmar-senha" autocomplete="new-password" minlength="6"
-              class="w-full rounded-lg border border-line-light dark:border-line bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-copper transition-colors">
+              class="w-full rounded-lg border border-field-light dark:border-field bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-accent transition-colors">
           </div>
           <button type="submit" id="btn-senha"
-            class="w-full border border-line-light dark:border-line text-ink-light dark:text-ink font-display font-semibold text-sm px-5 py-3 rounded-lg hover:border-copper-light dark:hover:border-copper transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            class="w-full border border-line-light dark:border-line text-ink-light dark:text-ink font-display font-semibold text-sm px-5 py-3 rounded-lg hover:border-copper-light dark:hover:border-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             Alterar senha
           </button>
         </form>
@@ -101,8 +115,8 @@
     </div>
   </main>
 
-  <script src="perfil.js"></script>
-  <script src="conta.js"></script>
-  <script src="script.js"></script>
+  <script defer src="perfil.js"></script>
+  <script defer src="conta.js"></script>
+  <script defer src="script.js"></script>
 </body>
 </html>

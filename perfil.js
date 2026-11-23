@@ -26,7 +26,7 @@ function mostrarMsg(caixa, texto, tipo) {
   caixa.textContent = texto;
   const cores = tipo === 'sucesso'
     ? 'border border-cyan-light/40 dark:border-cyan/40 bg-cyan-light/10 dark:bg-cyan/10 text-cyan-light dark:text-cyan'
-    : 'border border-red-500/40 bg-red-500/10 text-red-400';
+    : 'border border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400';
   caixa.className = `mb-4 text-sm rounded-lg px-3 py-2 ${cores}`;
 }
 

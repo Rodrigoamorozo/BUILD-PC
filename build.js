@@ -73,6 +73,10 @@ let fonteDados = { origem: 'exemplo', motivo: '' };
 // Busca e filtros da grade. São só de visualização: não mexem no build montado.
 let buscaAtual = '';
 let marcaAtiva = '';
+let somenteImportadas = false;
+
+// Benchmarks já consultados por par CPU|GPU (evita repetir a consulta a cada clique).
+const cacheBenchmarks = new Map();
 
 // ---------- 3b) Seleção (uma peça por categoria, ou várias quando a
 // categoria é marcada com multiplo: true — hoje só armazenamento) ----------
@@ -263,6 +267,19 @@ function checarCompatibilidade() {
     }
   }
 
+  // Placas X99/X79 de servidor aceitam só RDIMM (ECC REG); desktop usa UDIMM.
+  if (placaMae && placaMae.tipo_modulo) {
+    const modulo = memorias.find(
+      memoria => memoria.tipo_modulo && memoria.tipo_modulo !== placaMae.tipo_modulo
+    );
+
+    if (modulo) {
+      avisos.push(
+        `A memória é ${modulo.tipo_modulo}, mas a ${placaMae.nome} só aceita ${placaMae.tipo_modulo} — pente de servidor (ECC/REG) e de desktop não são intercambiáveis.`
+      );
+    }
+  }
+
   if (fonte) {
     // Soma todas as peças escolhidas, menos a própria fonte (ela é a
     // capacidade, não o consumo). Lista vazia soma zero.
@@ -309,8 +326,11 @@ function filtrarCompativeis(pecas) {
   }
 
   if (categoriaAtiva === 'memoria' && build['placa-mae']) {
+    const placa = build['placa-mae'];
+
     return pecas.filter(
-      p => p.tipo_memoria === build['placa-mae'].tipo_memoria
+      p => p.tipo_memoria === placa.tipo_memoria &&
+        (!placa.tipo_modulo || !p.tipo_modulo || p.tipo_modulo === placa.tipo_modulo)
     );
   }
 
@@ -330,16 +350,18 @@ function renderCategorias() {
     const btn = document.createElement('button');
 
     btn.dataset.active = String(ativa);
+    btn.type = 'button';
+    if (ativa) btn.setAttribute('aria-current', 'true');
     btn.className = `pin-tab flex items-center gap-2 transition-colors ${
       ativa
-        ? 'text-copper-light dark:text-copper border-copper-light dark:border-copper'
+        ? 'text-copper-light dark:text-accent border-copper-light dark:border-accent'
         : 'text-muted-light dark:text-muted border-transparent hover:text-ink-light dark:hover:text-ink'
     }`;
 
     btn.innerHTML = `
       <span class="w-1.5 h-1.5 rounded-sm shrink-0 ${
         escolhida
-          ? 'bg-copper-light dark:bg-copper'
+          ? 'bg-copper-light dark:bg-accent'
           : 'bg-line-light dark:bg-line'
       }" aria-hidden="true"></span>
       ${escaparHTML(cat.label)}
@@ -350,6 +372,7 @@ function renderCategorias() {
       // Cada categoria tem marcas diferentes: o filtro não faz sentido depois
       // da troca. A busca é mantida, porque pode valer para a nova categoria.
       marcaAtiva = '';
+      somenteImportadas = false;
       render();
     });
 
@@ -369,7 +392,7 @@ function renderDica() {
     : '';
 
   box.innerHTML = (dica
-    ? `<p class="text-sm text-ink-light dark:text-ink pl-3 border-l-2 border-copper-light dark:border-copper">${escaparHTML(dica)}</p>`
+    ? `<p class="text-sm text-ink-light dark:text-ink pl-3 border-l-2 border-copper-light dark:border-accent">${escaparHTML(dica)}</p>`
     : '') + varias;
 }
 
@@ -428,10 +451,19 @@ function linksPeca(peca) {
       .trim()
   );
 
-  const links = LOJAS.map(loja => ({ nome: loja.nome, url: loja.link(termo) }));
   const direto = String(peca.link_compra || peca.link || '').trim();
+  const temDireto = /^https?:\/\//i.test(direto);
 
-  if (/^https?:\/\//i.test(direto)) {
+  // Peça importada só se compra no AliExpress: as lojas brasileiras não têm.
+  if (ehImportada(peca)) {
+    return [temDireto
+      ? { nome: 'Anúncio no AliExpress', url: direto }
+      : { nome: 'Buscar no AliExpress', url: `https://pt.aliexpress.com/wholesale?SearchText=${termo}` }];
+  }
+
+  const links = LOJAS.map(loja => ({ nome: loja.nome, url: loja.link(termo) }));
+
+  if (temDireto) {
     links.unshift({ nome: 'Loja cadastrada', url: direto });
   }
 
@@ -441,6 +473,65 @@ function linksPeca(peca) {
 // Link principal, usado no resumo do build.
 function linkPeca(peca) {
   return linksPeca(peca)[0].url;
+}
+
+// A grade é redesenhada a cada clique: devolve o foco do teclado para o botão
+// da mesma peça (ou o primeiro botão dela, se aquele deixou de existir).
+function refocarPeca(id, acao) {
+  const card = document.querySelector(`[data-peca-id="${CSS.escape(String(id))}"]`);
+  if (!card) return;
+
+  const alvo = card.querySelector(`[data-acao="${acao}"]`) || card.querySelector('[data-acao]');
+  if (alvo && typeof alvo.focus === 'function') alvo.focus();
+}
+
+// ---------- Peças importadas (AliExpress) ----------
+function ehImportada(peca) {
+  return Boolean(peca) && peca.origem === 'aliexpress';
+}
+
+// Peça importada soma o frete estimado (quando cadastrado). Imposto de
+// importação não entra: depende do valor total da compra e do vendedor.
+function custoPeca(peca) {
+  const base = Number(peca.preco) || 0;
+  return ehImportada(peca) ? base + (Number(peca.frete_estimado) || 0) : base;
+}
+
+function incluirImportadas() {
+  const caixa = document.getElementById('incluir-importadas');
+  return Boolean(caixa && caixa.checked);
+}
+
+// Preços do catálogo ainda marcados como "estimado" não vieram de uma loja.
+function rotuloPreco(peca) {
+  if (ehImportada(peca)) {
+    return Number(peca.frete_estimado) > 0
+      ? `+ ${precoFmt(peca.frete_estimado)} de frete estimado`
+      : 'sem frete nem imposto';
+  }
+
+  const atualizado = typeof window !== 'undefined' && window.PRECOS && window.PRECOS[peca.id];
+  return peca.preco_status && peca.preco_status !== 'verificado' && !atualizado
+    ? 'preço estimado — confira na loja'
+    : '';
+}
+
+function seloImportadaHTML(peca) {
+  if (!ehImportada(peca)) return '';
+
+  return `<span class="rounded-full border border-amber-800/60 dark:border-yellow-500/60 px-2 py-0.5 text-[11px] text-amber-900 dark:text-yellow-500">Importada</span>`;
+}
+
+function importadaHTML(peca) {
+  if (!ehImportada(peca)) return '';
+
+  const prazo = Number(peca.prazo_dias) > 0 ? ` Prazo médio: ${Number(peca.prazo_dias)} dias.` : '';
+
+  return `
+    <p class="mb-3 rounded-md border border-amber-800/40 dark:border-yellow-500/40 bg-amber-800/10 dark:bg-yellow-500/10 px-2.5 py-2 text-xs text-amber-900 dark:text-yellow-500">
+      Importada do AliExpress.${prazo} Sem garantia no Brasil e pode ter imposto de importação. Confira o anúncio antes de comprar.
+    </p>
+  `;
 }
 
 // Cada palavra digitada precisa aparecer no nome, na marca ou nas specs.
@@ -461,9 +552,16 @@ function renderFiltrosMarcas(pecasBase) {
   const wrap = document.getElementById('filtros-marca');
   if (!wrap) return;
 
+  const importadas = pecasBase.filter(ehImportada);
+
+  // Sem peça importada nesta categoria, o filtro de origem não faz sentido.
+  if (somenteImportadas && !importadas.length) somenteImportadas = false;
+
+  // Com o filtro AliExpress ligado, as marcas listadas são só as das importadas.
+  const baseMarcas = somenteImportadas ? importadas : pecasBase;
   const contagem = {};
 
-  pecasBase.forEach(peca => {
+  baseMarcas.forEach(peca => {
     const marca = (peca.marca || '').trim() || 'Outras';
     contagem[marca] = (contagem[marca] || 0) + 1;
   });
@@ -474,37 +572,67 @@ function renderFiltrosMarcas(pecasBase) {
   // A marca ativa pode ter sumido (troca de categoria ou de peça compatível).
   if (marcaAtiva && !contagem[marcaAtiva]) marcaAtiva = '';
 
-  // Categoria com uma marca só não precisa de filtro.
-  if (marcas.length <= 1) {
+  // Categoria com uma marca só e sem importadas não precisa de filtro.
+  if (marcas.length <= 1 && !importadas.length) {
     wrap.innerHTML = '';
     return;
   }
 
   const chip = (valor, rotulo, total) => {
-    const ativo = marcaAtiva === valor;
+    const ativo = valor === '' ? (!marcaAtiva && !somenteImportadas) : marcaAtiva === valor;
 
     return `
       <button type="button" data-marca="${escaparHTML(valor)}" aria-pressed="${ativo}"
         class="rounded-full border px-3 py-1.5 transition-colors ${
           ativo
-            ? 'border-copper-light dark:border-copper bg-copper-light dark:bg-copper text-white'
-            : 'border-line-light dark:border-line text-muted-light dark:text-muted hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink'
+            ? 'border-copper-light dark:border-accent bg-copper-light dark:bg-copper text-white'
+            : 'border-line-light dark:border-line text-muted-light dark:text-muted hover:border-copper-light dark:hover:border-accent hover:text-ink-light dark:hover:text-ink'
         }">
         ${escaparHTML(rotulo)} <span class="opacity-60">${total}</span>
       </button>
     `;
   };
 
+  const chipImportadas = importadas.length ? `
+    <button type="button" data-origem="aliexpress" aria-pressed="${somenteImportadas}"
+      class="rounded-full border px-3 py-1.5 font-medium transition-colors ${
+        somenteImportadas
+          ? 'border-amber-800 bg-amber-800 text-white dark:border-yellow-500 dark:bg-yellow-500 dark:text-bg'
+          : 'border-amber-800/60 text-amber-900 hover:border-amber-800 dark:border-yellow-500/60 dark:text-yellow-500 dark:hover:border-yellow-500'
+      }">
+      AliExpress <span class="opacity-70">${importadas.length}</span>
+    </button>
+  ` : '';
+
   wrap.innerHTML =
     chip('', 'Todas', pecasBase.length) +
+    chipImportadas +
     marcas.map(([marca, total]) => chip(marca, marca, total)).join('');
+
+  // O filtro redesenha os botões: devolve o foco ao que o teclado acabou de ativar.
+  const refocar = seletor => {
+    const novo = wrap.querySelector(seletor);
+    if (novo && typeof novo.focus === 'function') novo.focus();
+  };
 
   wrap.querySelectorAll('button[data-marca]').forEach(botao => {
     botao.addEventListener('click', () => {
       marcaAtiva = botao.dataset.marca;
+      if (!marcaAtiva) somenteImportadas = false;
       renderPecas();
+      refocar(`button[data-marca="${CSS.escape(marcaAtiva)}"]`);
     });
   });
+
+  const botaoImportadas = wrap.querySelector('button[data-origem]');
+  if (botaoImportadas) {
+    botaoImportadas.addEventListener('click', () => {
+      somenteImportadas = !somenteImportadas;
+      marcaAtiva = '';
+      renderPecas();
+      refocar('button[data-origem]');
+    });
+  }
 }
 
 function renderPecas() {
@@ -521,15 +649,17 @@ function renderPecas() {
 
   const termo = normalizarTexto(buscaAtual);
   const pecasFiltradas = compativeis
+    .filter(peca => !somenteImportadas || ehImportada(peca))
     .filter(peca => !marcaAtiva || (peca.marca || '') === marcaAtiva)
     .filter(peca => combinaComBusca(peca, termo));
 
   const info = document.getElementById('resultado-info');
   if (info) {
-    const filtrando = Boolean(termo || marcaAtiva);
+    const filtrando = Boolean(termo || marcaAtiva || somenteImportadas);
     info.classList.toggle('hidden', !filtrando);
     info.textContent = filtrando
       ? `${pecasFiltradas.length} de ${compativeis.length} peças` +
+        (somenteImportadas ? ' · AliExpress' : '') +
         (marcaAtiva ? ` · ${marcaAtiva}` : '') +
         (termo ? ` · “${buscaAtual.trim()}”` : '')
       : '';
@@ -549,7 +679,7 @@ function renderPecas() {
         </p>
         ${semCompat ? '' : `
           <button type="button" id="limpar-filtros"
-            class="mt-3 text-xs underline underline-offset-2 hover:text-copper-light dark:hover:text-copper transition-colors">
+            class="mt-3 text-xs underline underline-offset-2 hover:text-copper-light dark:hover:text-accent transition-colors">
             Limpar busca e filtros
           </button>
         `}
@@ -561,6 +691,7 @@ function renderPecas() {
       limparFiltros.addEventListener('click', () => {
         buscaAtual = '';
         marcaAtiva = '';
+        somenteImportadas = false;
 
         const campo = document.getElementById('busca');
         if (campo) campo.value = '';
@@ -580,18 +711,15 @@ function renderPecas() {
     const varias = categoriaAceitaVarias(categoriaAtiva);
     const urlFoto = fotoDaPeca(peca);
 
-    // div em vez de <button>: o card tem link dentro, e link dentro de button
-    // não é HTML válido (e quebra a navegação por teclado).
-    const card = document.createElement('div');
-    card.setAttribute('role', 'button');
-    card.tabIndex = 0;
-    card.title = selecionada
-      ? 'Toque para remover'
-      : (varias ? 'Toque para adicionar' : 'Toque para escolher');
+    // <article> com botão próprio: o card tem links e botões dentro, o que não
+    // cabe num elemento com role="button". O clique no card inteiro continua
+    // funcionando para mouse e toque; o teclado usa o botão do card.
+    const card = document.createElement('article');
+    card.dataset.pecaId = String(peca.id);
     card.className = `group text-left border rounded-lg p-5 transition-colors relative cursor-pointer ${
       selecionada
-        ? 'border-copper-light dark:border-copper bg-copper-light/5 dark:bg-copper/5'
-        : 'border-line-light dark:border-line hover:border-copper-light dark:hover:border-copper'
+        ? 'border-copper-light dark:border-accent bg-copper-light/5 dark:bg-accent/5'
+        : 'border-line-light dark:border-line hover:border-copper-light dark:hover:border-accent'
     }`;
 
     card.innerHTML = `
@@ -603,32 +731,46 @@ function renderPecas() {
           loading="lazy" decoding="async" referrerpolicy="no-referrer"
           class="mb-3 h-32 w-full rounded-md bg-bg-light dark:bg-bg object-contain">
       ` : ''}
-      <p class="font-mono text-[11px] text-muted-light dark:text-muted mb-1">${escaparHTML(peca.marca)}</p>
+      <p class="flex flex-wrap items-center gap-2 font-mono text-[11px] text-muted-light dark:text-muted mb-1">${escaparHTML(peca.marca)}${seloImportadaHTML(peca)}</p>
       <h4 class="font-display font-semibold mb-1 pr-6">${escaparHTML(peca.nome)}</h4>
       <p class="text-xs text-muted-light dark:text-muted mb-3 min-h-[1rem]">${escaparHTML(peca.specs || '')}</p>
+      ${importadaHTML(peca)}
 
       <div class="flex items-end justify-between gap-3">
-        <p class="font-mono text-copper-light dark:text-copper font-semibold">${precoFmt(peca.preco)}</p>
+        <div>
+          <p class="font-mono text-copper-light dark:text-accent font-semibold">${precoFmt(peca.preco)}</p>
+          ${rotuloPreco(peca) ? `<p class="text-[11px] text-muted-light dark:text-muted">${escaparHTML(rotuloPreco(peca))}</p>` : ''}
+        </div>
         ${varias ? (selecionada ? `
           <div class="flex shrink-0 items-center gap-1" role="group" aria-label="Quantidade de ${escaparHTML(peca.nome)}">
             <button type="button" data-acao="menos" aria-label="Remover uma unidade"
-              class="h-7 w-7 rounded-md border border-line-light dark:border-line text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink">−</button>
+              class="h-7 w-7 rounded-md border border-line-light dark:border-line text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-accent hover:text-ink-light dark:hover:text-ink">−</button>
             <span class="w-6 text-center font-mono text-xs">${qtdPeca(peca)}</span>
             <button type="button" data-acao="mais" aria-label="Adicionar uma unidade"
-              class="h-7 w-7 rounded-md border border-line-light dark:border-line text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink">+</button>
+              class="h-7 w-7 rounded-md border border-line-light dark:border-line text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-accent hover:text-ink-light dark:hover:text-ink">+</button>
           </div>
         ` : `
-          <button type="button" data-acao="adicionar"
-            class="shrink-0 rounded-md border border-line-light dark:border-line px-2.5 py-1.5 text-xs text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink">
+          <button type="button" data-acao="adicionar" aria-label="Adicionar ${escaparHTML(peca.nome)}"
+            class="shrink-0 rounded-md border border-line-light dark:border-line px-2.5 py-1.5 text-xs text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-accent hover:text-ink-light dark:hover:text-ink">
             + Adicionar
           </button>
-        `) : ''}
+        `) : `
+          <button type="button" data-acao="escolher"
+            aria-label="${selecionada ? 'Remover' : 'Escolher'} ${escaparHTML(peca.nome)}"
+            class="shrink-0 rounded-md border px-2.5 py-1.5 text-xs transition-colors ${
+              selecionada
+                ? 'border-copper-light dark:border-accent text-copper-light dark:text-accent'
+                : 'border-field-light dark:border-field text-muted-light dark:text-muted hover:border-copper-light dark:hover:border-accent hover:text-ink-light dark:hover:text-ink'
+            }">
+            ${selecionada ? 'Remover' : 'Escolher'}
+          </button>
+        `}
       </div>
 
       <details class="mt-3 border-t border-line-light dark:border-line pt-2">
         <summary
-          class="inline-flex cursor-pointer list-none items-center gap-1 text-xs text-muted-light dark:text-muted underline underline-offset-2 transition-colors hover:text-copper-light dark:hover:text-copper">
-          Ver preço
+          class="inline-flex cursor-pointer list-none items-center gap-1 text-xs text-muted-light dark:text-muted underline underline-offset-2 transition-colors hover:text-copper-light dark:hover:text-accent">
+          Onde comprar
           <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
             <path d="M6 9l6 6 6-6"/>
           </svg>
@@ -652,18 +794,11 @@ function renderPecas() {
       foto.addEventListener('error', () => foto.classList.add('hidden'));
     }
 
-    card.addEventListener('click', () => {
+    // Clique no card (mouse/toque). Botões, links e o menu de lojas têm ação própria.
+    card.addEventListener('click', evento => {
+      if (evento.target.closest('button, a, details, summary')) return;
       alternarPeca(categoriaAtiva, peca);
       render();
-    });
-
-    // Como não é <button>, Enter e Espaço precisam ser tratados na mão.
-    // Se o foco estiver no menu de lojas, o card não deve reagir.
-    card.addEventListener('keydown', evento => {
-      if (evento.target !== card) return;
-      if (evento.key !== 'Enter' && evento.key !== ' ') return;
-      evento.preventDefault();
-      card.click();
     });
 
     // Menu de lojas: abre e fecha sem selecionar a peça sem querer.
@@ -674,6 +809,7 @@ function renderPecas() {
 
     // Ações de quantidade (só existem nas categorias que aceitam várias peças).
     const acoes = {
+      escolher: () => { alternarPeca(categoriaAtiva, peca); render(); },
       adicionar: () => { alternarPeca(categoriaAtiva, peca); render(); },
       mais: () => aumentarQtd(categoriaAtiva, peca),
       menos: () => diminuirQtd(categoriaAtiva, peca)
@@ -683,7 +819,10 @@ function renderPecas() {
       botao.addEventListener('click', evento => {
         evento.stopPropagation();
         const acao = acoes[botao.dataset.acao];
-        if (acao) acao();
+        if (acao) {
+          acao();
+          refocarPeca(peca.id, botao.dataset.acao);
+        }
       });
     });
 
@@ -722,8 +861,8 @@ function renderResumo() {
           class="group flex-1 cursor-pointer rounded-sm py-2 transition-colors">
           <span class="block h-1.5 rounded-sm transition-colors ${
             preenchido
-              ? 'bg-copper-light dark:bg-copper'
-              : 'bg-line-light dark:bg-line group-hover:bg-copper-light/60 dark:group-hover:bg-copper/60'
+              ? 'bg-copper-light dark:bg-accent'
+              : 'bg-line-light dark:bg-line group-hover:bg-copper-light/60 dark:group-hover:bg-accent/60'
           }"></span>
         </button>
       `;
@@ -734,6 +873,7 @@ function renderResumo() {
       botao.addEventListener('click', () => {
         categoriaAtiva = botao.dataset.categoria;
         marcaAtiva = '';
+        somenteImportadas = false;
         render();
 
         const grid = document.getElementById('pecas-grid');
@@ -762,14 +902,14 @@ function renderResumo() {
       li.innerHTML = `
         <div class="flex items-center justify-between gap-3">
           <span class="text-muted-light dark:text-muted truncate min-w-0">${escaparHTML(peca.nome)}${qtdPeca(peca) > 1
-            ? ` <span class="font-mono text-[11px] text-copper-light dark:text-copper">×${qtdPeca(peca)}</span>`
+            ? ` <span class="font-mono text-[11px] text-copper-light dark:text-accent">×${qtdPeca(peca)}</span>`
             : ''}</span>
           <span class="flex items-center gap-2 shrink-0">
-            <span>${precoFmt((Number(peca.preco) || 0) * qtdPeca(peca))}</span>
+            <span>${precoFmt(custoPeca(peca) * qtdPeca(peca))}</span>
             <button type="button"
               title="Remover"
               aria-label="Remover ${escaparHTML(peca.nome)}"
-              class="remover-peca-btn text-muted-light dark:text-muted hover:text-red-400 transition-colors leading-none text-base">
+              class="remover-peca-btn text-muted-light dark:text-muted hover:text-red-700 dark:hover:text-red-400 transition-colors leading-none text-base">
               &times;
             </button>
           </span>
@@ -777,7 +917,7 @@ function renderResumo() {
 
         <details>
           <summary
-            class="inline-flex cursor-pointer list-none items-center gap-1 text-[11px] text-muted-light dark:text-muted transition-colors hover:text-copper-light dark:hover:text-copper">
+            class="inline-flex cursor-pointer list-none items-center gap-1 text-[11px] text-muted-light dark:text-muted transition-colors hover:text-copper-light dark:hover:text-accent">
             onde comprar
             <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
               <path d="M6 9l6 6 6-6"/>
@@ -806,11 +946,20 @@ function renderResumo() {
   }
 
   const total = escolhidas.reduce(
-    (soma, item) => soma + (Number(item.peca.preco) || 0) * qtdPeca(item.peca),
+    (soma, item) => soma + custoPeca(item.peca) * qtdPeca(item.peca),
     0
   );
 
   totalEl.textContent = precoFmt(total);
+
+  const avisoImportada = document.getElementById('resumo-aviso');
+  if (avisoImportada) {
+    const temImportada = escolhidas.some(item => ehImportada(item.peca));
+    avisoImportada.classList.toggle('hidden', !temImportada);
+    avisoImportada.textContent = temImportada
+      ? 'Inclui peça importada: o total soma só o frete estimado cadastrado, sem imposto de importação e sem garantia no Brasil.'
+      : '';
+  }
 }
 
 // ---------- 8) Avisos de compatibilidade ----------
@@ -971,7 +1120,7 @@ function sugestaoHTML(dados) {
 
     return `
       <button type="button" data-sugerir="cpu" data-id="${escaparHTML(opcao.id)}"
-        class="mt-3 block w-full rounded-md border border-line-light px-3 py-2 text-left transition-colors hover:border-copper-light dark:border-line dark:hover:border-copper">
+        class="mt-3 block w-full rounded-md border border-line-light px-3 py-2 text-left transition-colors hover:border-copper-light dark:border-line dark:hover:border-accent">
         <span class="block text-xs text-muted-light dark:text-muted">Troca que resolve</span>
         <span class="font-semibold">${escaparHTML(opcao.nome)}</span>
         <span class="font-mono text-xs text-muted-light dark:text-muted">(${indiceFmt(indiceDesempenho(opcao))})</span>
@@ -1004,7 +1153,7 @@ function sugestaoHTML(dados) {
 
     return `
       <button type="button" data-sugerir="placa-video" data-id="${escaparHTML(melhor.id)}"
-        class="mt-3 block w-full rounded-md border border-line-light px-3 py-2 text-left transition-colors hover:border-copper-light dark:border-line dark:hover:border-copper">
+        class="mt-3 block w-full rounded-md border border-line-light px-3 py-2 text-left transition-colors hover:border-copper-light dark:border-line dark:hover:border-accent">
         <span class="block text-xs text-muted-light dark:text-muted">Sua CPU leva até</span>
         <span class="font-semibold">${escaparHTML(melhor.nome)}</span>
         <span class="font-mono text-xs text-muted-light dark:text-muted">(${indiceFmt(indiceDesempenho(melhor))})</span>
@@ -1063,7 +1212,7 @@ async function renderGargalo() {
       </p>
 
       <div class="space-y-4 mb-4">
-        ${medidorHTML('Seu processador', dados.idxCpu, 'bg-copper-light dark:bg-copper')}
+        ${medidorHTML('Seu processador', dados.idxCpu, 'bg-copper-light dark:bg-accent')}
         ${medidorHTML('Sua placa de vídeo pede', dados.cpuMinima, 'bg-cyan-light dark:bg-cyan')}
       </div>
 
@@ -1145,13 +1294,21 @@ async function renderBenchmarks(alvo, cpu, gpu, token) {
     return;
   }
 
-  alvo.innerHTML = `
-    ${titulo}
-    <p class="text-sm text-muted-light dark:text-muted">Consultando benchmarks...</p>
-  `;
+  const chaveCache = `${cpu.id}|${gpu.id}`;
+  let benchmarks = cacheBenchmarks.get(chaveCache);
+
+  if (!benchmarks) {
+    alvo.innerHTML = `
+      ${titulo}
+      <p class="text-sm text-muted-light dark:text-muted">Consultando benchmarks...</p>
+    `;
+  }
 
   try {
-    const benchmarks = await buscarBenchmarksDoPar(cpu.id, gpu.id);
+    if (!benchmarks) {
+      benchmarks = await buscarBenchmarksDoPar(cpu.id, gpu.id);
+      cacheBenchmarks.set(chaveCache, benchmarks);
+    }
 
     // Ignora resposta antiga se o usuário trocou as peças.
     if (token !== benchmarkConsultaAtual) return;
@@ -1209,7 +1366,7 @@ async function renderBenchmarks(alvo, cpu, gpu, token) {
           <span class="block mb-1 text-muted-light dark:text-muted">${tituloFiltro}</span>
           <select
             id="${id}"
-            class="w-full border border-line-light dark:border-line rounded-md p-2 bg-panel-light dark:bg-panel text-xs"
+            class="w-full border border-field-light dark:border-field rounded-md p-2 bg-panel-light dark:bg-panel text-xs"
           >
             <option value="">Todas</option>
             ${valores.map(valor => `
@@ -1467,7 +1624,8 @@ function potenciaEstimada(peca) {
 // Tem piso de qualidade: 16GB de RAM, 480GB de SSD e fonte com folga real.
 function montarComOrcamento(orcamento) {
   const porCategoria = categoria => todasPecas.filter(
-    peca => peca.categoria === categoria && Number(peca.preco) > 0
+    peca => peca.categoria === categoria && Number(peca.preco) > 0 &&
+      (incluirImportadas() || !ehImportada(peca))
   );
 
   const cpus = porCategoria('cpu');
@@ -1519,7 +1677,7 @@ function montarComOrcamento(orcamento) {
         fonte
       };
 
-      const total = Object.values(pecas).reduce((soma, p) => soma + Number(p.preco), 0);
+      const total = Object.values(pecas).reduce((soma, p) => soma + custoPeca(p), 0);
       if (total > orcamento) return;
 
       if (!melhor || idxGpu > melhor.idxGpu || (idxGpu === melhor.idxGpu && total < melhor.total)) {
@@ -1547,6 +1705,7 @@ function aplicarBuild(pecas) {
 
   categoriaAtiva = 'cpu';
   marcaAtiva = '';
+  somenteImportadas = false;
   render();
 }
 
@@ -1677,7 +1836,7 @@ function renderModelos() {
 
   wrap.innerHTML = MODELOS.map(modelo => `
     <button type="button" data-valor="${modelo.valor}"
-      class="rounded-full border border-line-light dark:border-line px-3 py-1.5 text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-copper hover:text-ink-light dark:hover:text-ink">
+      class="rounded-full border border-line-light dark:border-line px-3 py-1.5 text-muted-light dark:text-muted transition-colors hover:border-copper-light dark:hover:border-accent hover:text-ink-light dark:hover:text-ink">
       ${modelo.nome} · ${precoFmt(modelo.valor)}
     </button>
   `).join('');

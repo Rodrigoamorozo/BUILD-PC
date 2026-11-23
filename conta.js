@@ -51,7 +51,7 @@
     botao.setAttribute('aria-expanded', 'false');
     botao.setAttribute('aria-controls', 'conta-menu');
     botao.setAttribute('aria-label', 'Menu da conta de ' + nome);
-    botao.className = 'flex items-center gap-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel py-1 pl-1 pr-3 text-sm hover:border-copper-light dark:hover:border-copper transition-colors';
+    botao.className = 'flex items-center gap-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel py-1 pl-1 pr-3 text-sm hover:border-copper-light dark:hover:border-accent transition-colors';
 
     const avatar = document.createElement('span');
     avatar.setAttribute('aria-hidden', 'true');

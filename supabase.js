@@ -23,7 +23,8 @@ const COLUNAS_PECA = [
   'id', 'categoria', 'nome', 'marca', 'preco',
   'socket', 'tipo_memoria', 'potencia_w', 'desempenho_idx',
   'comprimento_mm', 'formato', 'gpu_max_mm', 'formatos_compativeis',
-  'specs', 'imagem_url'
+  'specs', 'imagem_url',
+  'origem', 'link_compra', 'preco_usd', 'frete_estimado', 'prazo_dias', 'tipo_modulo', 'preco_status'
 ].join(',');
 
 // Busca todas as peças da tabela "pecas"

@@ -37,17 +37,17 @@ function mostrarMensagem(texto, tipo) {
   els.mensagem.textContent = texto;
   const cores = tipo === 'sucesso'
     ? 'border border-cyan-light/40 dark:border-cyan/40 bg-cyan-light/10 dark:bg-cyan/10 text-cyan-light dark:text-cyan'
-    : 'border border-red-500/40 bg-red-500/10 text-red-400';
+    : 'border border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400';
   els.mensagem.className = `mb-4 text-sm rounded-lg px-3 py-2 ${cores}`;
 }
 
 function marcarAbaAtiva(tab, ativa) {
   tab.dataset.active = String(ativa);
-  tab.setAttribute('aria-selected', String(ativa));
+  tab.setAttribute('aria-pressed', String(ativa));
   tab.classList.toggle('text-copper-light', ativa);
-  tab.classList.toggle('dark:text-copper', ativa);
+  tab.classList.toggle('dark:text-accent', ativa);
   tab.classList.toggle('border-copper-light', ativa);
-  tab.classList.toggle('dark:border-copper', ativa);
+  tab.classList.toggle('dark:border-accent', ativa);
   tab.classList.toggle('text-muted-light', !ativa);
   tab.classList.toggle('dark:text-muted', !ativa);
 }

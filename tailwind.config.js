@@ -11,8 +11,13 @@ tailwind.config = {
         line:   { DEFAULT: '#262D38', light: '#D7DAE0' },
         ink:    { DEFAULT: '#ECEEF1', light: '#171A1F' },
         muted:  { DEFAULT: '#8F99A8', light: '#5C6470' },
+        // copper = azul da marca: fundo de botão com texto branco (10:1) e texto no tema claro.
         copper: { DEFAULT: '#241ec9', light: '#241ec9' },
-        cyan:   { DEFAULT: '#63D9CC', light: '#158C81' },
+        // accent = o mesmo azul, mais claro, para TEXTO e bordas no tema escuro (5,4:1; o copper dá 1,9:1).
+        accent: { DEFAULT: '#7C78F0' },
+        // field = borda de campos de formulário (3:1 contra o fundo).
+        field:  { DEFAULT: '#5B6678', light: '#7A8494' },
+        cyan:   { DEFAULT: '#63D9CC', light: '#0F6F66' },
         // Cobre de verdade — só decorativo (trilhas de placa-mãe), nunca em texto/botão.
         trace:  { DEFAULT: '#C97B3D', light: '#B8632A' },
       },
