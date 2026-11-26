@@ -47,6 +47,7 @@
       <a href="index.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Início</a>
       <a href="buildpc.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Montar PC</a>
       <a href="guia.html" aria-current="page" class="text-copper-light dark:text-accent">Guia</a>
+      <a href="feedback.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Feedback</a>
       <div id="conta-area" class="relative flex items-center">
         <a href="login.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Entrar</a>
       </div>
@@ -74,37 +75,78 @@
       <section id="pecas" class="pb-16 border-t border-line-light/60 dark:border-line/60 pt-12">
         <h2 class="font-display font-semibold text-3xl mb-6">As peças do PC</h2>
         <div class="py-6 border-b border-line-light/60 dark:border-line/60">
-            <h3 class="font-display font-medium text-base mb-1">Processador</h3>
+            <h3 class="font-display font-medium text-base mb-1"><a href="#geracoes" class="hover:text-copper-light dark:hover:text-accent transition-colors">Processador</a></h3>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">O cérebro do computador. Executa instruções e realiza cálculos.</p>
           </div>
         <div class="py-6 border-b border-line-light/60 dark:border-line/60">
-            <h3 class="font-display font-medium text-base mb-1">Placa de vídeo</h3>
+            <h3 class="font-display font-medium text-base mb-1"><a href="#geracoes" class="hover:text-copper-light dark:hover:text-accent transition-colors">Placa de vídeo</a></h3>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Gera imagens, vídeos e gráficos. Essencial pra jogos.</p>
           </div>
         <div class="py-6 border-b border-line-light/60 dark:border-line/60">
-            <h3 class="font-display font-medium text-base mb-1">Memória RAM</h3>
+            <h3 class="font-display font-medium text-base mb-1"><a href="#guia-memoria" class="hover:text-copper-light dark:hover:text-accent transition-colors">Memória RAM</a></h3>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Memória de trabalho. Mantém programas disponíveis rapidamente.</p>
           </div>
         <div class="py-6 border-b border-line-light/60 dark:border-line/60">
-            <h3 class="font-display font-medium text-base mb-1">Armazenamento</h3>
+            <h3 class="font-display font-medium text-base mb-1"><a href="#guia-armazenamento" class="hover:text-copper-light dark:hover:text-accent transition-colors">Armazenamento</a></h3>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Onde ficam seus arquivos, jogos, programas e o sistema.</p>
           </div>
         <div class="py-6 border-b border-line-light/60 dark:border-line/60">
-            <h3 class="font-display font-medium text-base mb-1">Fonte</h3>
+            <h3 class="font-display font-medium text-base mb-1"><a href="#guia-fonte" class="hover:text-copper-light dark:hover:text-accent transition-colors">Fonte</a></h3>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Converte a energia da tomada e alimenta os componentes.</p>
           </div>
         <div class="py-6 border-b border-line-light/60 dark:border-line/60">
-            <h3 class="font-display font-medium text-base mb-1">Placa-mãe</h3>
+            <h3 class="font-display font-medium text-base mb-1"><a href="#guia-placa-mae" class="hover:text-copper-light dark:hover:text-accent transition-colors">Placa-mãe</a></h3>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">Conecta os componentes e permite que trabalhem juntos.</p>
           </div>
         <div class="py-6 border-b border-line-light/60 dark:border-line/60">
-            <h3 class="font-display font-medium text-base mb-1">Gabinete</h3>
+            <h3 class="font-display font-medium text-base mb-1"><a href="#guia-gabinete" class="hover:text-copper-light dark:hover:text-accent transition-colors">Gabinete</a></h3>
             <p class="text-sm text-muted-light dark:text-muted leading-relaxed">A estrutura que abriga e protege os componentes.</p>
           </div>
       </section>
 
+      <!-- Como escolher cada peça -->
+      <section id="escolher" class="py-16 border-t border-line-light/60 dark:border-line/60">
+        <h2 class="font-display font-semibold text-3xl mb-4">Como escolher cada peça</h2>
+        <p class="text-muted-light dark:text-muted leading-relaxed mb-10">
+          O que olhar em cada categoria antes de colocar a peça no build. Onde o site já
+          confere sozinho, isso está indicado.
+        </p>
+        <div id="guia-gabinete" class="py-6 border-b border-line-light/60 dark:border-line/60 scroll-mt-28">
+          <h3 class="font-display font-medium text-base mb-2">Gabinete: tudo precisa caber</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-3">É a última peça da lista, mas é onde as medidas aparecem. Confira três coisas:</p>
+          <ul class="text-sm text-muted-light dark:text-muted leading-relaxed space-y-1.5 list-disc pl-5"><li><span class="text-ink-light dark:text-ink">Formato da placa-mãe:</span> ATX é a maior e a mais comum; Micro-ATX (mATX) é menor e mais barata; Mini-ITX é pequena e cara. Um gabinete aceita o seu formato e os menores, nunca um maior. O site avisa quando a placa-mãe não cabe.</li><li><span class="text-ink-light dark:text-ink">Comprimento da placa de vídeo:</span> placas fortes passam de 30 cm. Cada gabinete informa o máximo que aceita; o site compara com a placa escolhida.</li><li><span class="text-ink-light dark:text-ink">Ventilação:</span> frente em tela (mesh) deixa entrar mais ar do que frente de vidro ou painel fechado, e deixa o PC mais frio e silencioso. Vidro temperado nas laterais é só visual.</li><li><span class="text-ink-light dark:text-ink">Cooler e fonte:</span> veja a altura máxima do cooler do processador e se o gabinete aceita fonte ATX (a comum) ou só SFX (menor, de gabinetes compactos).</li></ul>
+        </div>
+        <div id="guia-memoria" class="py-6 border-b border-line-light/60 dark:border-line/60 scroll-mt-28">
+          <h3 class="font-display font-medium text-base mb-2">Memória RAM: tipo, capacidade e pentes</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-3">A memória precisa ser do tipo que a placa-mãe aceita, e a quantidade de pentes também importa.</p>
+          <ul class="text-sm text-muted-light dark:text-muted leading-relaxed space-y-1.5 list-disc pl-5"><li><span class="text-ink-light dark:text-ink">Tipo:</span> DDR4 e DDR5 não encaixam uma no lugar da outra. O site filtra a lista pela placa-mãe escolhida.</li><li><span class="text-ink-light dark:text-ink">Capacidade:</span> 16 GB atende jogos e uso geral hoje; 32 GB dá folga para jogos pesados, edição e vários programas abertos; 8 GB só serve para uso básico.</li><li><span class="text-ink-light dark:text-ink">Dois pentes:</span> 2 × 16 GB funciona melhor que 1 × 32 GB, porque a memória trabalha em dual channel (dois canais ao mesmo tempo) e entrega mais velocidade.</li><li><span class="text-ink-light dark:text-ink">Frequência (MHz) e latência (CL):</span> números maiores de MHz e menores de CL são melhores, mas a diferença no dia a dia é pequena perto de ter a capacidade certa. Alguns kits precisam ligar o perfil XMP (Intel) ou EXPO (AMD) na BIOS para chegar à velocidade anunciada.</li></ul>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mt-3">Memórias de servidor (RDIMM/ECC registrada) e de notebook (SODIMM) têm formato ou funcionamento diferente e não servem em placa-mãe de PC comum. Veja mais em “Peças importadas”.</p>
+        </div>
+        <div id="guia-armazenamento" class="py-6 border-b border-line-light/60 dark:border-line/60 scroll-mt-28">
+          <h3 class="font-display font-medium text-base mb-2">Armazenamento: SSD NVMe, SSD SATA ou HD</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-3">É onde ficam o sistema e os jogos. A velocidade aqui muda mais a sensação de “PC rápido” do que muita gente imagina.</p>
+          <ul class="text-sm text-muted-light dark:text-muted leading-relaxed space-y-1.5 list-disc pl-5"><li><span class="text-ink-light dark:text-ink">SSD NVMe (M.2):</span> o mais rápido, parece um pente comprido e encaixa direto na placa-mãe, sem cabo. Confira se a placa tem slot M.2 livre. PCIe 4.0 já é rápido de sobra para a maioria; PCIe 5.0 custa mais e raramente muda o uso real.</li><li><span class="text-ink-light dark:text-ink">SSD SATA:</span> bem mais rápido que HD, mas mais lento que NVMe. Boa opção para placas sem slot M.2 ou para um segundo disco.</li><li><span class="text-ink-light dark:text-ink">HD:</span> barato por terabyte, ótimo para guardar arquivos e backups; lento para o sistema e para jogos.</li><li><span class="text-ink-light dark:text-ink">Na prática:</span> um SSD para sistema e jogos, e um HD só se você precisa de muito espaço barato.</li></ul>
+        </div>
+        <div id="guia-fonte" class="py-6 border-b border-line-light/60 dark:border-line/60 scroll-mt-28">
+          <h3 class="font-display font-medium text-base mb-2">Fonte: potência com folga</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-3">A fonte alimenta tudo. Uma fonte fraca ou ruim causa desligamentos e pode danificar as outras peças.</p>
+          <ul class="text-sm text-muted-light dark:text-muted leading-relaxed space-y-1.5 list-disc pl-5"><li><span class="text-ink-light dark:text-ink">Potência:</span> some o consumo do processador e da placa de vídeo e escolha uma fonte com pelo menos 20% a mais. O site avisa quando a fonte escolhida fica justa para o build. A folga também deixa a fonte trabalhando mais fria.</li><li><span class="text-ink-light dark:text-ink">Selo 80 Plus (Bronze, Gold…):</span> mede eficiência, ou seja, quanto da energia da tomada vira energia útil. Não garante sozinho a qualidade da fonte, mas é um bom sinal quando vem de marca conhecida.</li><li><span class="text-ink-light dark:text-ink">Conectores:</span> placas de vídeo potentes pedem cabos PCIe específicos (8 pinos ou 12V-2x6). Confira se a fonte tem os que a sua placa usa.</li><li><span class="text-ink-light dark:text-ink">Modular:</span> permite ligar só os cabos que você precisa, deixando o interior do gabinete mais organizado. Ajuda, mas não é obrigatório.</li></ul>
+        </div>
+        <div id="guia-placa-mae" class="py-6 border-b border-line-light/60 dark:border-line/60 scroll-mt-28">
+          <h3 class="font-display font-medium text-base mb-2">Placa-mãe: socket, chipset e slots</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-3">Ela define o que pode ser ligado no PC e quanto ele pode crescer depois.</p>
+          <ul class="text-sm text-muted-light dark:text-muted leading-relaxed space-y-1.5 list-disc pl-5"><li><span class="text-ink-light dark:text-ink">Socket:</span> tem que ser o mesmo do processador. O site avisa se não combinam.</li><li><span class="text-ink-light dark:text-ink">Chipset:</span> muda recursos como overclock, número de portas USB e slots M.2. Para jogos comuns, chipsets de entrada e intermediários (como B650 ou B760) costumam ser suficientes.</li><li><span class="text-ink-light dark:text-ink">Formato:</span> ATX, Micro-ATX e Mini-ITX. Precisa caber no gabinete.</li><li><span class="text-ink-light dark:text-ink">BIOS:</span> processadores mais novos podem exigir atualização de BIOS em placas de um mesmo chipset mais antigas. Se a placa não puder ser atualizada sem outro processador, ela pode nem ligar.</li><li><span class="text-ink-light dark:text-ink">Wi-Fi e Bluetooth:</span> algumas placas já trazem, outras não. Se o seu PC não ficará perto do roteador, vale conferir.</li></ul>
+        </div>
+        <div id="guia-importadas" class="py-6 border-b border-line-light/60 dark:border-line/60 scroll-mt-28">
+          <h3 class="font-display font-medium text-base mb-2">Peças importadas (AliExpress)</h3>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mb-3">Algumas peças do catálogo vêm de anúncios do AliExpress, marcadas com o selo de importada. Elas podem sair bem mais baratas, mas têm particularidades:</p>
+          <ul class="text-sm text-muted-light dark:text-muted leading-relaxed space-y-1.5 list-disc pl-5"><li><span class="text-ink-light dark:text-ink">Prazo e frete:</span> a entrega leva semanas. O site soma o frete estimado ao total.</li><li><span class="text-ink-light dark:text-ink">Impostos:</span> compras do exterior podem ter imposto de importação e ICMS, que dependem do valor e das regras do momento. O preço que o site mostra é uma estimativa e não inclui tudo.</li><li><span class="text-ink-light dark:text-ink">Garantia:</span> trocar ou devolver um produto internacional é bem mais difícil do que numa loja do Brasil. Prefira vendedores com boa reputação e confira o anúncio.</li><li><span class="text-ink-light dark:text-ink">Compatibilidade:</span> confira o tipo de memória (UDIMM, RDIMM ou SODIMM) e o socket. Peças de servidor, como processadores Xeon e memória RDIMM, só funcionam em placas feitas para elas.</li></ul>
+          <p class="text-sm text-muted-light dark:text-muted leading-relaxed mt-3">Os dados de peças importadas são preenchidos a partir dos anúncios e podem estar desatualizados. Confirme tudo no link da loja antes de comprar.</p>
+        </div>
+      </section>
+
       <!-- Gerações e compatibilidade -->
-      <section id="geracoes" class="py-16 border-t border-line-light/60 dark:border-line/60">
+      <section id="geracoes" class="py-16 scroll-mt-28 border-t border-line-light/60 dark:border-line/60">
         <h2 class="font-display font-semibold text-3xl mb-4">Gerações e compatibilidade</h2>
         <p class="text-muted-light dark:text-muted leading-relaxed mb-10">
           "Geração" é a versão de um processador ou placa de vídeo. A cada geração nova,
@@ -299,6 +341,7 @@
       <p class="text-xs text-muted-light dark:text-muted mb-4">Nesta página</p>
       <nav class="space-y-3 text-sm mb-10">
         <a href="#pecas" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Peças</a>
+        <a href="#escolher" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Como escolher cada peça</a>
         <a href="#geracoes" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Gerações e compatibilidade</a>
         <a href="#gargalo" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Gargalo</a>
         <a href="#ordem" class="block text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Ordem de escolha</a>

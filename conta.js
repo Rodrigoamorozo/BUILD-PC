@@ -57,6 +57,16 @@
     avatar.setAttribute('aria-hidden', 'true');
     avatar.className = 'flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-copper-light dark:bg-copper text-xs font-semibold text-white';
     avatar.textContent = (nome.charAt(0) || '?').toUpperCase();
+    const fotoUrl = typeof urlAvatarSegura === 'function' ? urlAvatarSegura(user) : null;
+    if (fotoUrl) {
+      avatar.textContent = '';
+      avatar.classList.add('overflow-hidden');
+      const img = document.createElement('img');
+      img.src = fotoUrl;
+      img.alt = '';
+      img.className = 'h-full w-full object-cover';
+      avatar.appendChild(img);
+    }
 
     const rotulo = document.createElement('span');
     rotulo.className = 'hidden max-w-[140px] truncate sm:inline';

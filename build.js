@@ -444,6 +444,31 @@ const LOJAS = [
 
 // Lista de links de compra da peça. Se existir a coluna link_compra (ou link)
 // com uma URL, ela entra primeiro; as demais lojas continuam na lista.
+// Nome do anúncio pelo endereço: AliExpress, ou o site de onde o link veio.
+function rotuloLoja(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+    if (/(^|\.)aliexpress\.com$/.test(host)) return 'Produto no AliExpress';
+    return 'Anúncio em ' + host;
+  } catch {
+    return 'Anúncio da loja';
+  }
+}
+
+// AliExpress escolhe moeda e idioma pelo país detectado (pode abrir em euro).
+// O parâmetro gatewayAdapt=glo2bra pede a versão do Brasil (reais, português).
+// Links curtos (a.aliexpress.com/_xxx) não dá para alterar e ficam como estão.
+function paraAliexpressBR(url) {
+  try {
+    const u = new URL(url);
+    if (/(^|\.)aliexpress\.com$/.test(u.hostname) && u.hostname !== 'a.aliexpress.com') {
+      u.searchParams.set('gatewayAdapt', 'glo2bra');
+      return u.toString();
+    }
+  } catch { /* url inválida: devolve igual */ }
+  return url;
+}
+
 function linksPeca(peca) {
   const termo = encodeURIComponent(
     normalizarTexto(`${peca.marca || ''} ${peca.nome || ''}`)
@@ -456,9 +481,8 @@ function linksPeca(peca) {
 
   // Peça importada só se compra no AliExpress: as lojas brasileiras não têm.
   if (ehImportada(peca)) {
-    return [temDireto
-      ? { nome: 'Anúncio no AliExpress', url: direto }
-      : { nome: 'Buscar no AliExpress', url: `https://pt.aliexpress.com/wholesale?SearchText=${termo}` }];
+    const busca = { nome: 'Buscar no AliExpress', url: `https://pt.aliexpress.com/wholesale?SearchText=${termo}&gatewayAdapt=glo2bra`, busca: true };
+    return temDireto ? [{ nome: rotuloLoja(direto), url: paraAliexpressBR(direto) }, busca] : [busca];
   }
 
   const links = LOJAS.map(loja => ({ nome: loja.nome, url: loja.link(termo) }));
@@ -778,7 +802,7 @@ function renderPecas() {
         <ul class="mt-2 grid grid-cols-2 gap-1">
           ${linksPeca(peca).map(loja => `
             <li>
-              <a href="${escaparHTML(loja.url)}" target="_blank" rel="noopener noreferrer"
+              <a href="${escaparHTML(loja.url)}" target="_blank" rel="noopener noreferrer" data-link-loja
                 class="block rounded px-2 py-1 text-xs text-ink-light dark:text-ink transition-colors hover:bg-bg-light dark:hover:bg-bg">
                 ${escaparHTML(loja.nome)}
               </a>
@@ -1766,6 +1790,50 @@ function buildsSalvos() {
   }
 }
 
+// Link compacto: #c=cpu:ID:1;memoria:ID:2,ID:1 (sem base64; ids são uuid, sem ':' ';' ',')
+function codigoCompartilhar(dados) {
+  return Object.keys(dados)
+    .map(cat => cat + ':' + dados[cat].map(i => `${i.id}:${i.qtd}`).join(','))
+    .join(';');
+}
+
+function urlCompartilhar(dados) {
+  return `${location.href.split('#')[0]}#c=${codigoCompartilhar(dados)}`;
+}
+
+function lerCodigoCompacto(texto) {
+  const dados = {};
+  texto.split(';').forEach(trecho => {
+    const corte = trecho.indexOf(':');
+    const cat = trecho.slice(0, corte);
+    if (corte < 1 || !CATEGORIAS.some(c => c.id === cat)) return;
+    dados[cat] = trecho.slice(corte + 1).split(',').map(par => {
+      const [id, qtd] = par.split(':');
+      return { id, qtd: Number(qtd) || 1 };
+    }).filter(i => i.id);
+  });
+  return dados;
+}
+
+function abrirDialogo(dialogo) {
+  if (typeof dialogo.showModal === 'function') dialogo.showModal();
+  else dialogo.setAttribute('open', '');
+}
+
+function fecharDialogo(dialogo) {
+  if (typeof dialogo.close === 'function') dialogo.close();
+  else dialogo.removeAttribute('open');
+}
+
+async function copiarTexto(texto) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function salvarBuild() {
   const dados = serializarBuild();
 
@@ -1774,15 +1842,55 @@ function salvarBuild() {
     return;
   }
 
-  const nome = prompt('Nome do build:', `Build ${new Date().toLocaleDateString('pt-BR')}`);
-  if (!nome) return;
+  const dialogo = document.getElementById('dlg-build');
+  if (!dialogo) return;
 
-  const lista = buildsSalvos();
-  lista.unshift({ nome, data: new Date().toISOString(), dados });
-  localStorage.setItem(CHAVE_BUILDS, JSON.stringify(lista.slice(0, 20)));
+  const formNome = document.getElementById('dlg-form-nome');
+  const linkWrap = document.getElementById('dlg-link-wrap');
+  const campoNome = document.getElementById('dlg-nome');
+  const campoLink = document.getElementById('dlg-link');
+  const copiado = document.getElementById('dlg-copiado');
 
-  renderBuildsSalvos();
-  avisarOrcamento('Build salvo neste navegador.');
+  formNome.classList.remove('hidden');
+  linkWrap.classList.add('hidden');
+  copiado.textContent = '';
+  campoNome.value = `Build ${new Date().toLocaleDateString('pt-BR')}`;
+  abrirDialogo(dialogo);
+  campoNome.focus();
+  campoNome.select();
+
+  formNome.onsubmit = (evento) => {
+    evento.preventDefault();
+    const nome = campoNome.value.trim();
+    if (!nome) { campoNome.focus(); return; }
+
+    const lista = buildsSalvos();
+    lista.unshift({ nome, data: new Date().toISOString(), dados });
+    try {
+      localStorage.setItem(CHAVE_BUILDS, JSON.stringify(lista.slice(0, 20)));
+    } catch {
+      avisarOrcamento('Não deu pra salvar neste navegador (armazenamento bloqueado).');
+      fecharDialogo(dialogo);
+      return;
+    }
+    renderBuildsSalvos();
+    avisarOrcamento('Build salvo neste navegador.');
+
+    campoLink.value = urlCompartilhar(dados);
+    formNome.classList.add('hidden');
+    linkWrap.classList.remove('hidden');
+    campoLink.focus();
+    campoLink.select();
+  };
+
+  document.getElementById('dlg-cancelar').onclick = () => fecharDialogo(dialogo);
+  document.getElementById('dlg-fechar').onclick = () => fecharDialogo(dialogo);
+  document.getElementById('dlg-copiar').onclick = async () => {
+    campoLink.select();
+    copiado.textContent = (await copiarTexto(campoLink.value))
+      ? 'Link copiado.'
+      : 'Não deu pra copiar sozinho: o link já está selecionado, use Ctrl+C.';
+  };
 }
 
 function renderBuildsSalvos() {
@@ -1795,7 +1903,7 @@ function renderBuildsSalvos() {
     lista.map((item, indice) => `<option value="${indice}">${escaparHTML(item.nome)}</option>`).join('');
 }
 
-function compartilharBuild() {
+async function compartilharBuild() {
   const dados = serializarBuild();
 
   if (!Object.keys(dados).length) {
@@ -1803,29 +1911,33 @@ function compartilharBuild() {
     return;
   }
 
-  const codigo = btoa(encodeURIComponent(JSON.stringify(dados)));
-  const url = `${location.href.split('#')[0]}#b=${codigo}`;
+  const url = urlCompartilhar(dados);
 
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(
-      () => avisarOrcamento('Link copiado.'),
-      () => prompt('Copie o link:', url)
-    );
+  if (await copiarTexto(url)) {
+    avisarOrcamento('Link copiado. Quem abrir vê este mesmo build.');
   } else {
     prompt('Copie o link:', url);
   }
 }
 
-// Link compartilhado: o build inteiro viaja na URL (#b=...), sem banco.
+// Link compartilhado: o build inteiro viaja na URL (sem banco).
+// #c=... é o formato atual; #b=... (base64) segue funcionando para links antigos.
 function lerLinkCompartilhado() {
-  const achado = location.hash.match(/#b=(.+)$/);
-  if (!achado) return false;
+  const compacto = location.hash.match(/^#c=(.+)$/);
+  const antigo = location.hash.match(/^#b=(.+)$/);
+  if (!compacto && !antigo) return false;
 
   try {
-    aplicarDados(JSON.parse(decodeURIComponent(atob(achado[1]))));
+    const dados = compacto
+      ? lerCodigoCompacto(decodeURIComponent(compacto[1]))
+      : JSON.parse(decodeURIComponent(atob(antigo[1])));
+    if (!Object.keys(dados).length) throw new Error('vazio');
+    aplicarDados(dados);
+    avisarOrcamento('Build aberto a partir de um link compartilhado.');
     return true;
   } catch (erro) {
     console.warn('Link de build inválido.', erro);
+    avisarOrcamento('Esse link de build não é válido.');
     return false;
   }
 }

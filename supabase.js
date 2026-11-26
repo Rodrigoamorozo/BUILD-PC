@@ -93,7 +93,7 @@ function traduzirErroAuth(erro) {
   if (codigo === 'invalid_credentials' || msg.includes('invalid login credentials')) return 'E-mail ou senha incorretos.';
   if (codigo === 'email_not_confirmed' || msg.includes('email not confirmed')) return 'Esse e-mail ainda não foi confirmado. Confira sua caixa de entrada.';
   if (codigo === 'user_already_exists' || msg.includes('already registered')) return 'Já existe uma conta com esse e-mail. Tente entrar.';
-  if (codigo === 'weak_password' || msg.includes('at least 6')) return 'A senha precisa ter pelo menos 6 caracteres.';
+  if (codigo === 'weak_password' || msg.includes('at least')) return 'O servidor recusou essa senha por ser curta ou fraca demais. Tente uma maior, com letras e números.';
   if (codigo === 'same_password' || msg.includes('different from the old')) return 'A nova senha precisa ser diferente da atual.';
   if (codigo === 'email_address_invalid' || msg.includes('invalid format') || msg.includes('is invalid')) return 'Esse e-mail não parece válido.';
   if (codigo === 'signup_disabled' || msg.includes('signups not allowed')) return 'O cadastro de novas contas está desativado no momento.';
@@ -160,6 +160,43 @@ async function sair() {
 async function atualizarNome(nome) {
   const { error } = await db.auth.updateUser({ data: { nome: (nome || '').trim() } });
   if (error) return { ok: false, mensagem: traduzirErroAuth(error) };
+  return { ok: true };
+}
+
+// ---- Feedback (tabela "feedback": o site só consegue inserir, nunca ler) ----
+async function enviarFeedback({ tipo, mensagem, email, pagina }) {
+  const { error } = await db.from('feedback').insert({ tipo, mensagem, email, pagina });
+  if (error) return { ok: false, mensagem: 'Não deu pra enviar: ' + error.message };
+  return { ok: true };
+}
+
+// ---- Foto de perfil (Storage, bucket público "avatars", 1 pasta por usuário) ----
+const PREFIXO_AVATAR = SUPABASE_URL + '/storage/v1/object/public/avatars/';
+
+// Só aceita URL do nosso próprio bucket (o metadata do usuário é editável por ele).
+function urlAvatarSegura(user) {
+  const url = user && user.user_metadata && user.user_metadata.avatar_url;
+  return typeof url === 'string' && url.startsWith(PREFIXO_AVATAR) ? url : null;
+}
+
+async function enviarAvatar(user, blob) {
+  const caminho = `${user.id}/${Date.now()}.jpg`;
+  const { error } = await db.storage.from('avatars').upload(caminho, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
+  if (error) return { ok: false, mensagem: 'Não deu pra enviar a foto: ' + error.message };
+
+  const antiga = urlAvatarSegura(user);
+  const url = PREFIXO_AVATAR + caminho;
+  const { error: erroMeta } = await db.auth.updateUser({ data: { avatar_url: url } });
+  if (erroMeta) return { ok: false, mensagem: traduzirErroAuth(erroMeta) };
+  if (antiga) await db.storage.from('avatars').remove([antiga.slice(PREFIXO_AVATAR.length)]);
+  return { ok: true, url };
+}
+
+async function removerAvatar(user) {
+  const antiga = urlAvatarSegura(user);
+  const { error } = await db.auth.updateUser({ data: { avatar_url: null } });
+  if (error) return { ok: false, mensagem: traduzirErroAuth(error) };
+  if (antiga) await db.storage.from('avatars').remove([antiga.slice(PREFIXO_AVATAR.length)]);
   return { ok: true };
 }
 

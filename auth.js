@@ -4,6 +4,7 @@
 // (entrarComEmail, criarConta, redefinirSenha, sessaoAtual).
 
 const estado = { modo: 'entrar' };
+let medidor = null;
 
 const els = {
   tabs: document.getElementById('auth-tabs'),
@@ -26,6 +27,8 @@ const els = {
   voltar: document.getElementById('voltar-entrar'),
   btn: document.getElementById('btn-enviar'),
 };
+
+if (typeof montarMedidorSenha === 'function') medidor = montarMedidorSenha(els.senha);
 
 function limparMensagem() {
   els.mensagem.classList.add('hidden');
@@ -55,6 +58,8 @@ function marcarAbaAtiva(tab, ativa) {
 function setModo(modo) {
   estado.modo = modo;
   limparMensagem();
+
+  if (medidor) medidor.mostrar(modo === 'criar');
 
   if (modo === 'esqueci') {
     els.tabs.classList.add('hidden');
@@ -86,10 +91,10 @@ function setModo(modo) {
     els.senha.removeAttribute('minlength');
   } else {
     els.titulo.textContent = 'Criar sua conta';
-    els.subtitulo.textContent = 'Leva menos de um minuto e você já entra direto, sem confirmar e-mail.';
+    els.subtitulo.textContent = 'Leva menos de um minuto. Use pelo menos 5 caracteres.';
     els.btn.textContent = 'Criar conta';
     els.senha.autocomplete = 'new-password';
-    els.senha.setAttribute('minlength', '6');
+    els.senha.setAttribute('minlength', String(SENHA_MIN));
   }
 }
 
@@ -119,8 +124,8 @@ els.form.addEventListener('submit', async (evento) => {
   if (!email) { mostrarMensagem('Digite seu e-mail.', 'erro'); els.email.focus(); return; }
   if (estado.modo !== 'esqueci') {
     if (!senha) { mostrarMensagem('Digite sua senha.', 'erro'); els.senha.focus(); return; }
-    if (estado.modo === 'criar' && senha.length < 6) {
-      mostrarMensagem('A senha precisa ter pelo menos 6 caracteres.', 'erro');
+    if (estado.modo === 'criar' && senha.length < SENHA_MIN) {
+      mostrarMensagem(`A senha precisa ter pelo menos ${SENHA_MIN} caracteres.`, 'erro');
       els.senha.focus();
       return;
     }

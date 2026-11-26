@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0A0D12">
-<meta name="description" content="Atualize seu nome e sua senha no BuildPC.">
+<meta name="description" content="Atualize sua foto, seu nome e sua senha no BuildPC.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="BuildPC — Editar perfil">
-<meta property="og:description" content="Atualize seu nome e sua senha no BuildPC.">
+<meta property="og:description" content="Atualize sua foto, seu nome e sua senha no BuildPC.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='5' fill='%23241ec9'/%3E%3Cg fill='white'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='16' cy='10' r='2'/%3E%3Ccircle cx='22' cy='10' r='2'/%3E%3Ccircle cx='10' cy='16' r='2'/%3E%3Ccircle cx='16' cy='16' r='2'/%3E%3Ccircle cx='22' cy='16' r='2'/%3E%3Ccircle cx='10' cy='22' r='2'/%3E%3Ccircle cx='16' cy='22' r='2'/%3E%3Ccircle cx='22' cy='22' r='2'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>try{var t=localStorage.getItem('buildpc:tema');var claro=t?t==='claro':window.matchMedia('(prefers-color-scheme: light)').matches;document.documentElement.classList.toggle('dark',!claro);}catch(e){}</script>
@@ -47,6 +47,7 @@
     <div class="flex items-center gap-4 text-sm sm:gap-6">
       <a href="buildpc.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Montar PC</a>
       <a href="guia.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Guia</a>
+      <a href="feedback.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Feedback</a>
       <div id="conta-area" class="relative flex items-center">
         <a href="login.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Entrar</a>
       </div>
@@ -62,8 +63,24 @@
     <div id="perfil-card" class="hidden w-full max-w-md space-y-6">
       <div>
         <h1 class="font-display font-semibold text-2xl mb-1">Editar perfil</h1>
-        <p class="text-sm text-muted-light dark:text-muted">Atualize seu nome e sua senha.</p>
+        <p class="text-sm text-muted-light dark:text-muted">Atualize sua foto, seu nome e sua senha.</p>
       </div>
+
+      <section class="border border-line-light dark:border-line rounded-xl p-6 bg-panel-light dark:bg-panel">
+        <h2 class="font-display font-semibold text-base mb-4">Foto de perfil</h2>
+        <div id="foto-msg" class="hidden mb-4 text-sm rounded-lg px-3 py-2" aria-live="polite"></div>
+        <div class="flex items-center gap-5">
+          <div id="foto-preview" class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-copper-light dark:bg-copper text-3xl font-semibold text-white" aria-hidden="true">?</div>
+          <div class="min-w-0">
+            <input type="file" id="foto-arquivo" accept="image/png,image/jpeg,image/webp" class="sr-only" aria-describedby="foto-ajuda">
+            <div class="flex flex-wrap gap-2">
+              <button type="button" id="btn-foto" class="rounded-lg bg-copper-light dark:bg-copper px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed">Escolher foto</button>
+              <button type="button" id="btn-foto-remover" class="hidden rounded-lg border border-line-light dark:border-line px-4 py-2 text-sm text-muted-light dark:text-muted transition-colors hover:text-ink-light dark:hover:text-ink disabled:opacity-60">Remover</button>
+            </div>
+            <p id="foto-ajuda" class="mt-2 text-xs text-muted-light dark:text-muted">JPG, PNG ou WebP. A foto é recortada em quadrado e reduzida automaticamente.</p>
+          </div>
+        </div>
+      </section>
 
       <section class="border border-line-light dark:border-line rounded-xl p-6 bg-panel-light dark:bg-panel">
         <h2 class="font-display font-semibold text-base mb-4">Seus dados</h2>
@@ -94,12 +111,12 @@
         <form id="form-senha" novalidate>
           <div class="mb-4">
             <label for="senha-nova" class="block text-sm mb-1.5">Nova senha</label>
-            <input type="password" id="senha-nova" name="nova-senha" autocomplete="new-password" minlength="6"
+            <input type="password" id="senha-nova" name="nova-senha" autocomplete="new-password" minlength="5" maxlength="72"
               class="w-full rounded-lg border border-field-light dark:border-field bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-accent transition-colors">
           </div>
           <div class="mb-5">
             <label for="senha-confirma" class="block text-sm mb-1.5">Confirmar nova senha</label>
-            <input type="password" id="senha-confirma" name="confirmar-senha" autocomplete="new-password" minlength="6"
+            <input type="password" id="senha-confirma" name="confirmar-senha" autocomplete="new-password" minlength="5" maxlength="72"
               class="w-full rounded-lg border border-field-light dark:border-field bg-bg-light dark:bg-bg px-3.5 py-2.5 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-accent transition-colors">
           </div>
           <button type="submit" id="btn-senha"
@@ -115,6 +132,7 @@
     </div>
   </main>
 
+  <script defer src="senha.js"></script>
   <script defer src="perfil.js"></script>
   <script defer src="conta.js"></script>
   <script defer src="script.js"></script>

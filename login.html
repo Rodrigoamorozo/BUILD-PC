@@ -47,6 +47,7 @@
     <div class="flex items-center gap-4 text-sm sm:gap-6">
       <a href="buildpc.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Montar PC</a>
       <a href="guia.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Guia</a>
+      <a href="feedback.html" class="text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">Feedback</a>
       <button id="theme-btn"
         class="flex items-center gap-2 text-xs font-mono px-3 py-2 rounded-full border border-line-light dark:border-line bg-panel-light dark:bg-panel hover:border-copper-light dark:hover:border-accent transition-colors">
         <span id="theme-label">Modo claro</span>
@@ -99,7 +100,7 @@
           <div id="campo-senha-wrap" class="mb-2">
             <label for="campo-senha" class="block text-sm mb-1.5">Senha</label>
             <div class="relative">
-              <input type="password" id="campo-senha" name="senha" required autocomplete="current-password" minlength="6"
+              <input type="password" id="campo-senha" name="senha" required autocomplete="current-password" maxlength="72"
                 class="w-full rounded-lg border border-field-light dark:border-field bg-bg-light dark:bg-bg px-3.5 py-2.5 pr-11 text-sm outline-none focus-visible:border-copper-light dark:focus-visible:border-accent transition-colors">
               <button type="button" id="toggle-senha" aria-label="Mostrar senha" aria-pressed="false"
                 class="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted-light dark:text-muted hover:text-ink-light dark:hover:text-ink transition-colors">
@@ -132,6 +133,7 @@
     </div>
   </main>
 
+  <script defer src="senha.js"></script>
   <script defer src="auth.js"></script>
   <script defer src="script.js"></script>
 </body>
