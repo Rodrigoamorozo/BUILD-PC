@@ -503,8 +503,10 @@ function linksPeca(peca) {
 
   // Peça importada só se compra no AliExpress: as lojas brasileiras não têm.
   if (ehImportada(peca)) {
-    const busca = { nome: 'Buscar no AliExpress', url: `https://pt.aliexpress.com/wholesale?SearchText=${termo}&gatewayAdapt=glo2bra`, busca: true };
-    return temDireto ? [{ nome: rotuloLoja(direto), url: paraAliexpressBR(direto) }, busca] : [busca];
+    // Só o link direto do produto. Sem link cadastrado, avisa em vez de levar a uma busca.
+    return temDireto
+      ? [{ nome: rotuloLoja(direto), url: paraAliexpressBR(direto) }]
+      : [{ nome: 'Link do anúncio ainda não cadastrado', url: '', semLink: true }];
   }
 
   const links = LOJAS.map(loja => ({ nome: loja.nome, url: loja.link(termo) }));
@@ -518,7 +520,7 @@ function linksPeca(peca) {
 
 // Link principal, usado no resumo do build.
 function linkPeca(peca) {
-  return linksPeca(peca)[0].url;
+  return linksPeca(peca)[0].url || '';
 }
 
 // A grade é redesenhada a cada clique: devolve o foco do teclado para o botão
@@ -822,14 +824,16 @@ function renderPecas() {
           </svg>
         </summary>
         <ul class="mt-2 grid grid-cols-2 gap-1">
-          ${linksPeca(peca).map(loja => `
+          ${linksPeca(peca).map(loja => loja.semLink ? `
+            <li class="col-span-2 px-2 py-1 text-xs text-muted-light dark:text-muted">${escaparHTML(loja.nome)}</li>
+            ` : `
             <li>
-              <a href="${escaparHTML(loja.url)}" target="_blank" rel="noopener noreferrer" data-link-loja
+              <a href="${escaparHTML(loja.url)}" target="_blank" rel="noopener noreferrer"
                 class="block rounded px-2 py-1 text-xs text-ink-light dark:text-ink transition-colors hover:bg-bg-light dark:hover:bg-bg">
                 ${escaparHTML(loja.nome)}
               </a>
             </li>
-          `).join('')}
+            `).join('')}
         </ul>
       </details>
     `;
@@ -970,14 +974,16 @@ function renderResumo() {
             </svg>
           </summary>
           <ul class="mt-1.5 grid grid-cols-2 gap-1">
-            ${linksPeca(peca).map(loja => `
+            ${linksPeca(peca).map(loja => loja.semLink ? `
+              <li class="col-span-2 px-2 py-1 text-xs text-muted-light dark:text-muted">${escaparHTML(loja.nome)}</li>
+              ` : `
               <li>
                 <a href="${escaparHTML(loja.url)}" target="_blank" rel="noopener noreferrer"
                   class="block rounded px-2 py-1 text-[11px] text-ink-light dark:text-ink transition-colors hover:bg-bg-light dark:hover:bg-bg">
                   ${escaparHTML(loja.nome)}
                 </a>
               </li>
-            `).join('')}
+              `).join('')}
           </ul>
         </details>
       `;
