@@ -27,15 +27,38 @@ const COLUNAS_PECA = [
   'origem', 'link_compra', 'preco_usd', 'frete_estimado', 'prazo_dias', 'tipo_modulo', 'preco_status'
 ].join(',');
 
+// Cache do catálogo no navegador (30 min): quem volta ou troca de página não baixa
+// tudo de novo, e o banco aguenta mais visitas. Para ver uma edição na hora, abra a
+// página com ?atualizar=1 no endereço. Se o banco cair, usa a cópia guardada.
+const CACHE_PECAS_CHAVE = 'buildpc:pecas:' + COLUNAS_PECA.length;
+const CACHE_PECAS_MS = 30 * 60 * 1000;
+
+function lerCachePecas() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_PECAS_CHAVE));
+    return c && Array.isArray(c.dados) && c.dados.length ? c : null;
+  } catch {
+    return null;
+  }
+}
+
 // Busca todas as peças da tabela "pecas"
 async function buscarPecas() {
   ultimoErroBanco = null;
+
+  const cache = lerCachePecas();
+  const forcar = /[?&]atualizar=1\b/.test(location.search);
+  if (cache && !forcar && Date.now() - cache.t < CACHE_PECAS_MS) return cache.dados;
+
   const { data, error } = await db.from('pecas').select(COLUNAS_PECA);
   if (error) {
     ultimoErroBanco = error.message;
     console.error('Erro ao buscar peças:', error.message);
-    return [];
+    return cache ? cache.dados : [];
   }
+  try {
+    localStorage.setItem(CACHE_PECAS_CHAVE, JSON.stringify({ t: Date.now(), dados: data }));
+  } catch { /* armazenamento cheio ou bloqueado: segue sem cache */ }
   return data;
 }
 

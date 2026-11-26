@@ -24,11 +24,11 @@
 <link rel="stylesheet" href="style.css">
  
 <!-- Biblioteca do Supabase (banco de dados das peças) -->
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
 <script defer src="supabase.js"></script>
 </head>
  
-<body class="bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300 min-h-screen">
+<body class="tem-barra-build bg-bg-light dark:bg-bg text-ink-light dark:text-ink font-body transition-colors duration-300 min-h-screen">
 
   <a href="#conteudo" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-copper-light focus:px-4 focus:py-2 focus:text-sm focus:text-white">Pular para o conteúdo</a>
  
@@ -132,7 +132,11 @@
       <div id="pecas-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1"></div>
 
       <!-- Resumo do build -->
-      <aside class="lg:w-[300px] shrink-0">
+      <aside id="painel-build" class="lg:w-[300px] shrink-0" aria-label="Seu build">
+        <div class="painel-topo mb-3 flex items-center justify-between lg:hidden">
+          <p class="font-display text-sm text-muted-light dark:text-muted">Resumo do seu PC</p>
+          <button type="button" id="fechar-painel" class="rounded-lg border border-line-light dark:border-line px-3 py-1.5 text-sm text-ink-light dark:text-ink">Fechar</button>
+        </div>
         <!-- Resumo + gargalo juntos e grudados: rolar a grade não tira o gargalo da tela -->
         <div class="space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
           <div class="border border-line-light dark:border-line rounded-xl p-6 bg-panel-light dark:bg-panel">
@@ -170,6 +174,18 @@
       </aside>
     </div>
   </main>
+
+  <!-- Celular: barra fixa com o andamento do build; abre o resumo sem precisar rolar a página -->
+  <div id="barra-build" class="fixed inset-x-0 bottom-0 z-40 border-t border-line-light dark:border-line bg-panel-light/95 dark:bg-panel/95 px-4 py-3 backdrop-blur lg:hidden">
+    <button type="button" id="abrir-painel" aria-controls="painel-build" aria-expanded="false"
+      class="flex w-full items-center justify-between gap-3 rounded-lg bg-copper-light dark:bg-copper px-4 py-3 text-left text-white">
+      <span class="min-w-0">
+        <span id="barra-contagem" class="block text-xs opacity-90">0 de 7 peças</span>
+        <span id="barra-total" class="block font-display text-base font-semibold">R$ 0</span>
+      </span>
+      <span class="shrink-0 text-sm font-medium">Ver meu build</span>
+    </button>
+  </div>
 
   <!-- Salvar build: pede o nome e, depois de salvar, mostra o link para compartilhar -->
   <dialog id="dlg-build" aria-labelledby="dlg-titulo" class="w-[min(92vw,26rem)] rounded-xl border border-line-light dark:border-line bg-panel-light dark:bg-panel p-6 text-ink-light dark:text-ink backdrop:bg-black/60">

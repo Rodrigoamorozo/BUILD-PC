@@ -77,3 +77,21 @@ html:not(.dark) textarea:focus-visible,
 html:not(.dark) summary:focus-visible {
   outline-color: #241ec9;
 }
+
+/* Montar PC no celular: o resumo vira uma tela que abre por cima (botão "Ver meu build"),
+   em vez de ficar lá embaixo depois da lista de peças. */
+@media (max-width: 1023px) {
+  body.tem-barra-build #conteudo { padding-bottom: 7rem; }
+  #painel-build { display: none; }
+  #painel-build.aberto {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    overflow-y: auto;
+    padding: 1rem 1rem 2rem;
+    background: #F1F2F5;
+  }
+  html.dark #painel-build.aberto { background: #0A0D12; }
+  body.painel-aberto { overflow: hidden; }
+}

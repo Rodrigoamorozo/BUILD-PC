@@ -1004,6 +1004,14 @@ function renderResumo() {
 
   totalEl.textContent = precoFmt(total);
 
+  // Barra do celular (só existe em buildpc.html)
+  const barraContagem = document.getElementById('barra-contagem');
+  const barraTotal = document.getElementById('barra-total');
+  if (barraContagem) {
+    barraContagem.textContent = `${categoriasPreenchidas.length} de ${CATEGORIAS.length} peças`;
+    barraTotal.textContent = precoFmt(total);
+  }
+
   const avisoImportada = document.getElementById('resumo-aviso');
   if (avisoImportada) {
     const temImportada = escolhidas.some(item => ehImportada(item.peca));
@@ -1774,6 +1782,35 @@ function montarPara(valor) {
   aplicarBuild(resultado.pecas);
   avisarOrcamento(`Montado por ${precoFmt(resultado.total)}.`);
 }
+
+// ---------- Painel do build no celular ----------
+(function ligarPainelCelular() {
+  const painel = document.getElementById('painel-build');
+  const abrir = document.getElementById('abrir-painel');
+  const fechar = document.getElementById('fechar-painel');
+  if (!painel || !abrir || !fechar) return;
+
+  function definir(aberto) {
+    painel.classList.toggle('aberto', aberto);
+    document.body.classList.toggle('painel-aberto', aberto);
+    abrir.setAttribute('aria-expanded', String(aberto));
+    (aberto ? fechar : abrir).focus();
+  }
+
+  abrir.addEventListener('click', () => definir(true));
+  fechar.addEventListener('click', () => definir(false));
+  document.addEventListener('keydown', evento => {
+    if (evento.key === 'Escape' && painel.classList.contains('aberto')) definir(false);
+  });
+  // Ao ampliar a janela (ou girar o celular) o painel volta ao layout normal.
+  window.matchMedia('(min-width: 1024px)').addEventListener('change', evento => {
+    if (evento.matches) {
+      painel.classList.remove('aberto');
+      document.body.classList.remove('painel-aberto');
+      abrir.setAttribute('aria-expanded', 'false');
+    }
+  });
+})();
 
 // ---------- salvar / compartilhar ----------
 
