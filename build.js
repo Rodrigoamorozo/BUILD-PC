@@ -288,14 +288,36 @@ function checarCompatibilidade() {
       .flatMap(cat => listaPecas(cat.id))
       .reduce((soma, peca) => soma + potenciaEstimada(peca) * qtdPeca(peca), 0);
 
-    if (consumoEstimado > Number(fonte.potencia_w) * 0.8) {
+    // Vermelho só quando o consumo estimado passa do que a fonte entrega.
+    // Pouca folga (85% a 100%) vira uma nota discreta no resumo (ver folgaFonteTexto).
+    if (consumoEstimado > Number(fonte.potencia_w)) {
       avisos.push(
-        `A fonte de ${fonte.potencia_w}W pode ser justa para o consumo estimado (${consumoEstimado}W) — considere uma fonte mais potente.`
+        `A fonte de ${fonte.potencia_w}W não dá conta do consumo estimado (${consumoEstimado}W) — escolha uma fonte mais potente.`
       );
     }
   }
 
   return avisos;
+}
+
+// Consumo estimado = soma da potência de todas as peças, menos a fonte.
+function consumoEstimadoBuild() {
+  return CATEGORIAS
+    .filter(cat => cat.id !== 'fonte')
+    .flatMap(cat => listaPecas(cat.id))
+    .reduce((soma, peca) => soma + potenciaEstimada(peca) * qtdPeca(peca), 0);
+}
+
+// Nota (não é erro): fonte funciona, mas com pouca margem.
+function folgaFonteTexto() {
+  const fonte = listaPecas('fonte')[0];
+  const capacidade = fonte ? Number(fonte.potencia_w) : 0;
+  if (!capacidade) return '';
+
+  const consumo = consumoEstimadoBuild();
+  if (consumo <= capacidade * 0.85 || consumo > capacidade) return '';
+
+  return `A fonte de ${capacidade}W atende o consumo estimado (${consumo}W), mas com pouca folga (${Math.round(consumo / capacidade * 100)}% de uso). Uma fonte maior deixa mais margem para picos e futuras trocas.`;
 }
 
 // ---------- 5b) Remover peça ----------
@@ -979,10 +1001,12 @@ function renderResumo() {
   const avisoImportada = document.getElementById('resumo-aviso');
   if (avisoImportada) {
     const temImportada = escolhidas.some(item => ehImportada(item.peca));
-    avisoImportada.classList.toggle('hidden', !temImportada);
-    avisoImportada.textContent = temImportada
-      ? 'Inclui peça importada: o total soma só o frete estimado cadastrado, sem imposto de importação e sem garantia no Brasil.'
-      : '';
+    const notas = [];
+    if (temImportada) notas.push('Inclui peça importada: o total soma só o frete estimado cadastrado, sem imposto de importação e sem garantia no Brasil.');
+    const folga = folgaFonteTexto();
+    if (folga) notas.push(folga);
+    avisoImportada.classList.toggle('hidden', !notas.length);
+    avisoImportada.textContent = notas.join(' ');
   }
 }
 
