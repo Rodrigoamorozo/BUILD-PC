@@ -207,7 +207,7 @@ async function carregarPecas() {
 
       if (Array.isArray(dados) && dados.length) {
         fonteDados = { origem: 'banco', motivo: '' };
-        return aplicarPrecosLocais(dados);
+        return aplicarPrecosLocais(semIndiceDeDesempenho(dados));
       }
 
       fonteDados.motivo =
@@ -223,6 +223,17 @@ async function carregarPecas() {
 
   fonteDados.origem = 'exemplo';
   return aplicarPrecosLocais(MOCK_PECAS);
+}
+
+// Processador e placa de vídeo sem índice de desempenho não entram no catálogo do site:
+// sem o índice o gargalo não pode ser calculado ("Não dá para estimar"). Ficam guardadas
+// no banco e voltam a aparecer sozinhas quando receberem o índice.
+function semIndiceDeDesempenho(pecas) {
+  return pecas.filter(p => {
+    if (p.categoria !== 'cpu' && p.categoria !== 'placa-video') return true;
+    const n = Number(p.desempenho_idx ?? p.desempenho);
+    return Number.isFinite(n) && n > 0;
+  });
 }
 
 function renderAvisoBanco() {
@@ -1079,11 +1090,24 @@ function nivelGargalo(percentual) {
 }
 
 // CPU mínima (no índice do catálogo) para cada faixa de GPU, em 1080p.
-// Calibrada para a escala atual: 4060 ≈ 23 pede um Ryzen 5 5600 (55);
-// 4070 ≈ 38 pede 7600 (64); 5080 ≈ 77 pede 7800X3D (86); 5090 = 100 pede 9800X3D (98).
+// Pontos de referência: 4060 ≈ 23 pede um Ryzen 5 5600 (55); 4070 ≈ 38 pede 7600 (64);
+// 5080 ≈ 77 pede 7800X3D (86); 5090 = 100 pede 9800X3D (98). Entre eles a curva é reta,
+// e para placas muito fracas a exigência cai junto (antes tinha um piso de 45 que fazia
+// até uma GTX 550 Ti "pedir" um processador médio).
+const PONTOS_CPU_MINIMA = [[0, 20], [23, 55], [38, 64], [77, 86], [100, 98]];
+
 function cpuMinimaParaGpu(idxGpu) {
-  const indice = Number(idxGpu) || 0;
-  return Math.round(Math.min(99, Math.max(45, 45 + 0.53 * indice)));
+  const x = Math.max(0, Number(idxGpu) || 0);
+  const P = PONTOS_CPU_MINIMA;
+  if (x >= P[P.length - 1][0]) return P[P.length - 1][1];
+  for (let i = 1; i < P.length; i += 1) {
+    if (x <= P[i][0]) {
+      const [x0, y0] = P[i - 1];
+      const [x1, y1] = P[i];
+      return Math.round(y0 + ((x - x0) / (x1 - x0)) * (y1 - y0));
+    }
+  }
+  return P[P.length - 1][1];
 }
 
 // Aceita as duas grafias da coluna: desempenho_idx (atual) e desempenho
@@ -1239,17 +1263,6 @@ function sugestaoHTML(dados) {
   return '';
 }
 
-// O gargalo só é tão bom quanto os índices. Só 'verificado' tem fonte conferida.
-function avisoIndiceHTML(...pecas) {
-  const fracas = pecas.filter(p => p && p.desempenho_status !== 'verificado');
-  if (!fracas.length) return '';
-  const nomes = fracas.map(p => escaparHTML(p.nome)).join(' e ');
-  return `
-    <p class="mt-3 rounded-md border border-amber-800/40 dark:border-yellow-500/40 bg-amber-800/10 dark:bg-yellow-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-900 dark:text-yellow-500">
-      O índice de ${nomes} é aproximado (ainda sem benchmark verificado neste catálogo). Trate o resultado como uma estimativa.
-    </p>`;
-}
-
 async function renderGargalo() {
   const box = document.getElementById('gargalo-info');
   if (!box) return;
@@ -1324,10 +1337,8 @@ async function renderGargalo() {
 
       ${sugestaoHTML(dados)}
 
-      ${avisoIndiceHTML(cpu, gpu)}
-
       <p class="text-xs text-muted-light dark:text-muted leading-relaxed mt-4 pt-4 border-t border-line-light dark:border-line">
-        Estimativa em 1080p. Muda por jogo e resolução.
+        Estimativa aproximada em 1080p. Muda por jogo e resolução.
       </p>
     `;
   }
