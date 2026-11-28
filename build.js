@@ -288,6 +288,18 @@ function checarCompatibilidade() {
       .flatMap(cat => listaPecas(cat.id))
       .reduce((soma, peca) => soma + potenciaEstimada(peca) * qtdPeca(peca), 0);
 
+    // Fonte compacta (Flex-ATX / SFX) em gabinete que não declara aceitá-la.
+    const gab = build.gabinete;
+    const formatoFonte = String(fonte.formato || '').toLowerCase();
+    if (gab && /flex|sfx|1u/.test(formatoFonte)) {
+      const textoGab = `${gab.nome || ''} ${gab.specs || ''}`.toLowerCase();
+      if (!/flex|sfx|1u/.test(textoGab)) {
+        avisos.push(
+          `A fonte ${fonte.nome} é ${fonte.formato} (formato compacto). Confira se o ${gab.nome} aceita esse formato, senão será preciso um adaptador.`
+        );
+      }
+    }
+
     // Vermelho só quando o consumo estimado passa do que a fonte entrega.
     // Pouca folga (85% a 100%) vira uma nota discreta no resumo (ver folgaFonteTexto).
     if (consumoEstimado > Number(fonte.potencia_w)) {
@@ -1227,6 +1239,17 @@ function sugestaoHTML(dados) {
   return '';
 }
 
+// O gargalo só é tão bom quanto os índices. Só 'verificado' tem fonte conferida.
+function avisoIndiceHTML(...pecas) {
+  const fracas = pecas.filter(p => p && p.desempenho_status !== 'verificado');
+  if (!fracas.length) return '';
+  const nomes = fracas.map(p => escaparHTML(p.nome)).join(' e ');
+  return `
+    <p class="mt-3 rounded-md border border-amber-800/40 dark:border-yellow-500/40 bg-amber-800/10 dark:bg-yellow-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-900 dark:text-yellow-500">
+      O índice de ${nomes} é aproximado (ainda sem benchmark verificado neste catálogo). Trate o resultado como uma estimativa.
+    </p>`;
+}
+
 async function renderGargalo() {
   const box = document.getElementById('gargalo-info');
   if (!box) return;
@@ -1300,6 +1323,8 @@ async function renderGargalo() {
         : ''}
 
       ${sugestaoHTML(dados)}
+
+      ${avisoIndiceHTML(cpu, gpu)}
 
       <p class="text-xs text-muted-light dark:text-muted leading-relaxed mt-4 pt-4 border-t border-line-light dark:border-line">
         Estimativa em 1080p. Muda por jogo e resolução.

@@ -24,7 +24,7 @@ const COLUNAS_PECA = [
   'socket', 'tipo_memoria', 'potencia_w', 'desempenho_idx',
   'comprimento_mm', 'formato', 'gpu_max_mm', 'formatos_compativeis',
   'specs', 'imagem_url',
-  'origem', 'link_compra', 'preco_usd', 'frete_estimado', 'prazo_dias', 'tipo_modulo', 'preco_status'
+  'desempenho_status', 'origem', 'link_compra', 'preco_usd', 'frete_estimado', 'prazo_dias', 'tipo_modulo', 'preco_status'
 ].join(',');
 
 // Cache do catálogo no navegador (30 min): quem volta ou troca de página não baixa
